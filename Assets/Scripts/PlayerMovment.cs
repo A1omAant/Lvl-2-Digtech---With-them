@@ -8,9 +8,11 @@ public class PlayerMovement : MonoBehaviour
     public float moveSpeedSprint;
     public float moveSpeedCrouch;
     public float dashSpeed;
+
     [Header("Slope Handling")]
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
+
     [Header("Drag Settings")]
     public float stealthDrag;
     public float sprintDrag;
@@ -28,17 +30,17 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode sprintKey = KeyCode.LeftControl;
     public KeyCode crouchKey = KeyCode.Space;
 
-
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
     public bool grounded;
 
-
     public Transform orientation;
 
     float horizontalInput;
+
     float verticalInput;
+
     Vector3 moveDirection;
 
     Rigidbody rb;
@@ -53,6 +55,9 @@ public class PlayerMovement : MonoBehaviour
         crouching
     }
 
+    public bool dashing;
+
+
 
     private void Start(){
         rb = GetComponent<Rigidbody>();     
@@ -61,20 +66,19 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void Update(){
-        Debug.Log(rb.linearVelocity);
+        //Debug.Log(rb.linearVelocity);
 
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
         PlayerInput();
         StateHandler();
         SpeedControl();
-   
-        
-        if(grounded){
+
+        if(state == MovementState.walk || state == MovementState.crouching || state == MovementState.sprinting){
             rb.linearDamping = stealthDrag;
         }else{
             rb.linearDamping = 0;
         }
-        }
+    }
         
         
 
@@ -90,15 +94,18 @@ public class PlayerMovement : MonoBehaviour
 
     private void StateHandler(){
 
-        if(grounded && Input.GetKey(sprintKey)){
+
+        if(dashing){
+            state = MovementState.dashing;
+            moveSpeed = dashSpeed;
+        }
+
+        else if(grounded && Input.GetKey(sprintKey)){
             state = MovementState.sprinting;
             moveSpeed = moveSpeedSprint;
             stealthDrag = sprintDrag;
         }
-        else if(grounded && Input.GetKey(dashKey)){
-            state = MovementState.dashing;
-            stealthDrag = dashDrag;
-        }
+      
         else if(grounded && Input.GetKey(crouchKey)){
             state = MovementState.crouching;
             
@@ -132,14 +139,17 @@ public class PlayerMovement : MonoBehaviour
 
         //rb.AddForce(Vector3.down * 9.81f, ForceMode.Acceleration);
 
-       
-
-        
+       if (state == MovementState.dashing) return;
+             
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
         //rb.MovePosition(rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime);
 
         if(OnSlope()){
             rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
+
+            //Vector3 slopeMove = GetSlopeMoveDirection() * moveSpeed;
+            //slopeMove = Vector3.ClampMagnitude(new Vector3(slopeMove.x, 0f, slopeMove.z), moveSpeed);
+            //rb.AddForce(slopeMove * slopeMultiplier, ForceMode.Force);
 
             if (rb.linearVelocity.y > 0){
                 rb.AddForce(Vector3.down * 80f, ForceMode.Force);
@@ -162,7 +172,7 @@ public class PlayerMovement : MonoBehaviour
     
     private void SpeedControl(){
 
-        if(OnSlope()){
+        if(!OnSlope()){
             if (rb.linearVelocity.magnitude > moveSpeed)
                 rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
         }else{

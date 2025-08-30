@@ -7,6 +7,7 @@ public class PlayerCam : MonoBehaviour
     [Header("Player Camera Settings")]
     public float Xsens;
     public float Ysens;
+     public float baseFOV;
 
     public Transform orientation;
 
@@ -17,6 +18,7 @@ public class PlayerCam : MonoBehaviour
     private void Start(){
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        Camera.main.fieldOfView = baseFOV;
 
     }
 
@@ -34,6 +36,27 @@ public class PlayerCam : MonoBehaviour
         orientation.localRotation = Quaternion.Euler(0, yRotation, 0);
     }
 
+
+    public void DoFOVAdjustment(float targetFOV, float duration)
+    {
+        
+        StartCoroutine(AdjustFieldOfView(targetFOV, duration));
+    }
+
+    private IEnumerator AdjustFieldOfView( float targetFOV, float duration)
+    {
+        float startFOV = Camera.main.fieldOfView;
+        float time = 0;
+
+        while (time < duration)
+        {
+            Camera.main.fieldOfView = Mathf.Lerp(startFOV, targetFOV, time / duration);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        Camera.main.fieldOfView = targetFOV;
+    }
 
     
     
