@@ -406,7 +406,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 92be056ad48794faf90b7677fed87268, type: 2}
+  - {fileID: 2100000, guid: 54088d7b6d3a14c6e87ae71d0c471f4d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -444,13 +444,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 38409570}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.00993983, y: 0.00000023096297, z: -0.024220381, w: 0.9996573}
-  m_LocalPosition: {x: -24.23, y: 0.04, z: 118.21}
+  m_LocalRotation: {x: 0.008530794, y: -0.057476766, z: -0.024751822, w: 0.99800354}
+  m_LocalPosition: {x: -24.11, y: -0.79, z: 117.81}
   m_LocalScale: {x: 5.79, y: 5.79, z: 5.79}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 1.139, y: -0.028, z: -2.776}
+  m_LocalEulerAnglesHint: {x: 0.813, y: -6.613, z: -2.888}
 --- !u!1 &62678050
 GameObject:
   m_ObjectHideFlags: 0
@@ -1076,20 +1076,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7abdbed2d58449f98eae98bdbafd680, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BaseMoveSpeed: 2
-  MoveSpeedSprint: 5
-  MoveSpeedCrouch: 1
+  baseMoveSpeed: 7
+  moveSpeedSprint: 10
+  moveSpeedCrouch: 5
   dashSpeed: 15
-  Steathdrag: 10
-  SprintDrag: 8
-  CrouchDrag: 15
-  dashDrag: 1
-  CrouchHeight: 0.5
-  CroucStartHeight: 1
+  maxSlopeAngle: 45
+  stealthDrag: 5
+  sprintDrag: 5
+  crouchDrag: 5
+  dashDrag: 5
+  crouchHeight: 0.5
+  crouchStartHeight: 2
+  airMultiplier: 0.4
   dashKey: 304
   sprintKey: 306
-  crouch: 32
-  PlayerHeight: 2
+  crouchKey: 32
+  playerHeight: 2
   whatIsGround:
     serializedVersion: 2
     m_Bits: 8
@@ -1106,7 +1108,7 @@ Rigidbody:
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -1244,7 +1246,7 @@ GameObject:
   - component: {fileID: 615700357}
   - component: {fileID: 615700356}
   - component: {fileID: 615700355}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1582,7 +1584,7 @@ GameObject:
   - component: {fileID: 1067574859}
   - component: {fileID: 1067574858}
   - component: {fileID: 1067574857}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube (7)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1671,13 +1673,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1067574856}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.26958582, w: 0.96297646}
-  m_LocalPosition: {x: -23.54, y: 2.49, z: 131.94}
+  m_LocalRotation: {x: 0, y: 0, z: 0.38268343, w: 0.92387956}
+  m_LocalPosition: {x: -24.05, y: 1.98, z: 131.94}
   m_LocalScale: {x: 0, y: 10.516558, z: 2.436316}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 31.279}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 45}
 --- !u!1 &1075514453
 GameObject:
   m_ObjectHideFlags: 0
@@ -1907,7 +1909,7 @@ GameObject:
   - component: {fileID: 1141613888}
   - component: {fileID: 1141613887}
   - component: {fileID: 1141613886}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube (6)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1996,13 +1998,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1141613885}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 0.45635068, w: 0.8898}
-  m_LocalPosition: {x: -23.54, y: 2.49, z: 125.04}
+  m_LocalRotation: {x: 0, y: 0, z: 0.5735764, w: 0.8191521}
+  m_LocalPosition: {x: -24.11, y: 0.91, z: 125.04}
   m_LocalScale: {x: 0, y: 10.516558, z: 2.436316}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 54.304}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 70}
 --- !u!1 &1176645876
 GameObject:
   m_ObjectHideFlags: 0

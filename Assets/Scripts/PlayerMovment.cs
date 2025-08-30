@@ -1,41 +1,45 @@
 using UnityEngine;
 
-public class PlayerMovment : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    private float MoveSpeed;
-    public float BaseMoveSpeed;
-    public float MoveSpeedSprint;
-    public float MoveSpeedCrouch;
+    private float moveSpeed;
+    public float baseMoveSpeed;
+    public float moveSpeedSprint;
+    public float moveSpeedCrouch;
     public float dashSpeed;
+    [Header("Slope Handling")]
+    public float maxSlopeAngle;
+    private RaycastHit slopeHit;
     [Header("Drag Settings")]
-    public float Steathdrag;
-    public float SprintDrag;
-    public float CrouchDrag;
+    public float stealthDrag;
+    public float sprintDrag;
+    public float crouchDrag;
     public float dashDrag;
 
     [Header("Crouch Settings")]
-    public float CrouchHeight;
-    public float CroucStartHeight;
-
+    public float crouchHeight;
+    public float crouchStartHeight;
+    public float airMultiplier;
   
 
-    [Header("Movmeent Keybinds")]
+    [Header("Movement Keybinds")]
     public KeyCode dashKey = KeyCode.LeftShift;
     public KeyCode sprintKey = KeyCode.LeftControl;
-    public KeyCode crouch = KeyCode.Space;
+    public KeyCode crouchKey = KeyCode.Space;
 
 
     [Header("Ground Check")]
-    public float PlayerHeight;
+    public float playerHeight;
     public LayerMask whatIsGround;
     public bool grounded;
+
 
     public Transform orientation;
 
     float horizontalInput;
     float verticalInput;
-    Vector3 MoveDirection;
+    Vector3 moveDirection;
 
     Rigidbody rb;
 
@@ -53,52 +57,57 @@ public class PlayerMovment : MonoBehaviour
     private void Start(){
         rb = GetComponent<Rigidbody>();     
         rb.freezeRotation = true;   
-        CroucStartHeight = transform.localScale.y;
+        crouchStartHeight = transform.localScale.y;
     }
 
     private void Update(){
+        Debug.Log(rb.linearVelocity);
+
+        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.2f, whatIsGround);
+        PlayerInput();
         StateHandler();
         SpeedControl();
-
-        grounded = Physics.Raycast(transform.position, Vector3.down, PlayerHeight * 0.5f + 0.2f, whatIsGround);
-
+   
+        
         if(grounded){
-            rb.linearDamping = Steathdrag;
+            rb.linearDamping = stealthDrag;
+        }else{
+            rb.linearDamping = 0;
         }
-        PlayerInput();
-        PlayerMove();
+        }
+        
+        
 
-        if(Input.GetKeyDown(crouch)){
-            transform.localScale = new Vector3(transform.localScale.x, CrouchHeight, transform.localScale.z);
-            rb.AddForce(Vector3.down * (CroucStartHeight - CrouchHeight)*5, ForceMode.Impulse);
-        }
-        if(Input.GetKeyUp(crouch)){
-            transform.localScale = new Vector3(transform.localScale.x, CroucStartHeight, transform.localScale.z);
-        }
+
 
        
+
+    private void FixedUpdate()
+    {
+        PlayerMove();
     }
+
 
     private void StateHandler(){
 
         if(grounded && Input.GetKey(sprintKey)){
             state = MovementState.sprinting;
-            MoveSpeed = MoveSpeedSprint;
-            Steathdrag = SprintDrag;
+            moveSpeed = moveSpeedSprint;
+            stealthDrag = sprintDrag;
         }
         else if(grounded && Input.GetKey(dashKey)){
             state = MovementState.dashing;
-            Steathdrag = dashDrag;
+            stealthDrag = dashDrag;
         }
-        else if(grounded && Input.GetKey(crouch)){
+        else if(grounded && Input.GetKey(crouchKey)){
             state = MovementState.crouching;
             
-            MoveSpeed = MoveSpeedCrouch;
-            Steathdrag = CrouchDrag;
+            moveSpeed = moveSpeedCrouch;
+            stealthDrag = crouchDrag;
         }
         else{
             state = MovementState.walk;
-            MoveSpeed = BaseMoveSpeed;
+            moveSpeed = baseMoveSpeed;
             
         }
     }
@@ -108,22 +117,77 @@ public class PlayerMovment : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        
+
+        if(Input.GetKeyDown(crouchKey)){
+            transform.localScale = new Vector3(transform.localScale.x, crouchHeight, transform.localScale.z);
+            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+        }
+        if(Input.GetKeyUp(crouchKey)){
+            transform.localScale = new Vector3(transform.localScale.x, crouchStartHeight, transform.localScale.z);
+        }
+
+  
     }
     private void PlayerMove(){
 
+        //rb.AddForce(Vector3.down * 9.81f, ForceMode.Acceleration);
 
-        MoveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-        //rb.MovePosition(rb.position + MoveDirection * MoveSpeed * Time.fixedDeltaTime);
-        rb.AddForce(MoveDirection.normalized * MoveSpeed * 10f, ForceMode.Force);
+       
+
+        
+        moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+        //rb.MovePosition(rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime);
+
+        if(OnSlope()){
+            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
+
+            if (rb.linearVelocity.y > 0){
+                rb.AddForce(Vector3.down * 80f, ForceMode.Force);
+            }
+
+        }
+        else if(grounded){
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+        }
+
+       
+        else if(!grounded){
+            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+        }
+
+        rb.useGravity = !OnSlope();
 
     }
-
+    
     private void SpeedControl(){
-        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        if(flatVel.magnitude > MoveSpeed){
-            Vector3 limitedVel = flatVel.normalized * MoveSpeed;
-            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
+
+        if(OnSlope()){
+            if (rb.linearVelocity.magnitude > moveSpeed)
+                rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
+        }else{
+            Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+            if(flatVel.magnitude > moveSpeed){
+                Vector3 limitedVel = flatVel.normalized * moveSpeed;
+                rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
+            }
         }
+    }
+
+
+
+    private bool OnSlope(){
+
+        if(Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f)){
+            float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
+            return angle < maxSlopeAngle && angle != 0;
+
+
+        }
+        return false;
+
+    }
+    private Vector3 GetSlopeMoveDirection(){
+        return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized; 
     }
 }
