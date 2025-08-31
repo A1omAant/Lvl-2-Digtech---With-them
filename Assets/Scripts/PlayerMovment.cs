@@ -35,9 +35,12 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask whatIsGround;
     public bool grounded;
 
+
     public Transform orientation;
 
     float horizontalInput;
+
+   // public SoundSystem soundsystem;
 
     float verticalInput;
 
@@ -77,6 +80,13 @@ public class PlayerMovement : MonoBehaviour
             rb.linearDamping = stealthDrag;
         }else{
             rb.linearDamping = 0;
+        }
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            Debug.Log("Sound emitted");
+            SoundSystem.Instance.EmitSound(transform.position, 50f, 10f, 0.7f, false);
+            
         }
     }
         
@@ -140,7 +150,7 @@ public class PlayerMovement : MonoBehaviour
         //rb.AddForce(Vector3.down * 9.81f, ForceMode.Acceleration);
 
        if (state == MovementState.dashing) return;
-             
+
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
         //rb.MovePosition(rb.position + moveDirection * moveSpeed * Time.fixedDeltaTime);
 

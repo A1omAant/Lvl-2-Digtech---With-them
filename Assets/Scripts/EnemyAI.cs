@@ -1,0 +1,21 @@
+using UnityEngine;
+
+public class EnemyAI : MonoBehaviour
+{
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    public void OnSoundDetected(float volume)
+    {
+        Debug.Log("enemy hit with " + volume);
+    }
+}
