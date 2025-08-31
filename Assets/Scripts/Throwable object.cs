@@ -33,6 +33,7 @@ public class Throwableobject : MonoBehaviour
     public float soundVolume = 1f;
     public bool EmmitsNoiseOnLanding = true;
     public bool EmmitsNoiseOnDrop = true;
+    private bool IsThrown;
 
    
 
@@ -92,7 +93,7 @@ public class Throwableobject : MonoBehaviour
             }
         }
         
-        if(Input.GetKeyUp(throwKey)){
+        if(Input.GetKeyUp(throwKey)&&isHeld){
             if(IsThrowable){   
                 Throw();
             }
@@ -138,6 +139,7 @@ public class Throwableobject : MonoBehaviour
         transform.SetParent(null);
         rb.AddForce(holdPoint.forward * throwForce + Vector3.up * throwHeight, ForceMode.Impulse);
         rb.angularVelocity = Random.insideUnitSphere * 10f;
+        IsThrown=true;
 
     }
     public void Trajectory()
@@ -159,6 +161,14 @@ public class Throwableobject : MonoBehaviour
         lineRenderer.SetPosition(i, pos);
     }
 }
+private void OnCollisionEnter(Collision collision)
+    {
+        if(IsThrown){
+            IsThrown=false;
+            SoundSystem.Instance.EmitSound(transform.position, 40f, 200f, 0.7f, true, gameObject);
+            Debug.Log("Thrown object emmited sound");
+        }
+    }
 
 
 

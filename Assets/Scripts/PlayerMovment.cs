@@ -35,6 +35,14 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask whatIsGround;
     public bool grounded;
 
+    [Header("sound settings")]
+    public float walkNoise;
+    public float SprintNoise;
+    public float DashNoise;
+    public float walkRad;
+    public float Springrad;
+    public float Dashrad;
+
 
     public Transform orientation;
 
@@ -82,12 +90,7 @@ public class PlayerMovement : MonoBehaviour
             rb.linearDamping = 0;
         }
 
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            Debug.Log("Sound emitted");
-            SoundSystem.Instance.EmitSound(transform.position, 50f, 10f, 0.7f, false);
-            
-        }
+        
     }
         
         
@@ -108,12 +111,16 @@ public class PlayerMovement : MonoBehaviour
         if(dashing){
             state = MovementState.dashing;
             moveSpeed = dashSpeed;
+            SoundSystem.Instance.EmitSound(transform.position, Dashrad, DashNoise, 0.7f, false, gameObject); // dashing volumes
+             //Debug.Log("dashing, emmited sound");
         }
 
         else if(grounded && Input.GetKey(sprintKey)){
             state = MovementState.sprinting;
             moveSpeed = moveSpeedSprint;
             stealthDrag = sprintDrag;
+            SoundSystem.Instance.EmitSound(transform.position, Springrad, SprintNoise, 0.7f, false, gameObject); // sprinting sound volumes
+            // Debug.Log("sprinting, emmited sound");
         }
       
         else if(grounded && Input.GetKey(crouchKey)){
@@ -121,10 +128,17 @@ public class PlayerMovement : MonoBehaviour
             
             moveSpeed = moveSpeedCrouch;
             stealthDrag = crouchDrag;
+
         }
         else{
             state = MovementState.walk;
             moveSpeed = baseMoveSpeed;
+            if (horizontalInput != 0 || verticalInput != 0)
+            {
+                SoundSystem.Instance.EmitSound(transform.position, walkRad, walkNoise, 0.7f, false, gameObject);
+            } //walking sound volumes
+            //Debug.Log("walking, emmited sound");
+         
             
         }
     }
