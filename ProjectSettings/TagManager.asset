@@ -11,10 +11,10 @@ TagManager:
   - ground
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
+  - Wall
+  - PrefabSolid
+  - PrefabTrans
+  - Enemy
   - 
   - 
   - 
