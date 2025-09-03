@@ -113,7 +113,6 @@ public class EnemyAI : MonoBehaviour
         switch(state){
             case EnemyState.Idle:
                 Idle();
-                
                 break;
             case EnemyState.Patroling:
                 agent.speed = patrolSpeed;
@@ -207,7 +206,7 @@ public class EnemyAI : MonoBehaviour
     }
     public void chasePlayer(){
         agent.isStopped = false;
-        float targetHeight = 0.2f;
+        float targetHeight = 0.1f;
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
         agent.SetDestination(player.position);
     }
@@ -224,7 +223,7 @@ public class EnemyAI : MonoBehaviour
         }else{
             
             
-                float targetHeight = 0.1f;
+                float targetHeight = 0f;
                 agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
                 agent.isStopped = true;
                 Scan(5f);
