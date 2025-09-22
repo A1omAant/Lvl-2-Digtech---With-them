@@ -119,7 +119,7 @@ public class EnemyAI : MonoBehaviour
                 //patrol();
                 break;
             case EnemyState.Alerted:
-                //investigate();
+                investigate();
                 agent.speed = AlertMoveSpeed;
                 break;
             case EnemyState.Chasing:
@@ -180,6 +180,7 @@ public class EnemyAI : MonoBehaviour
 
         if (source.CompareTag("Player")){
             if (heardVolume > aggroCutoffPlayer){
+                Debug.Log("aggro to player");
                 state = EnemyState.Chasing; // chase if player makes loud noise
                 ShouldUpdatePos = true;
                 return;
@@ -206,27 +207,30 @@ public class EnemyAI : MonoBehaviour
     }
     public void chasePlayer(){
         agent.isStopped = false;
-        float targetHeight = 0.1f;
+        float targetHeight = 0.3f;
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
         agent.SetDestination(player.position);
     }
-
+  
     public void Idle(){
 
 
         float distanceToIdle = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),new Vector3(idleSpot.x, 0, idleSpot.z));
 
         //Debug.Log(distanceToIdle);
-        if(distanceToIdle <1f){
+        if(distanceToIdle < 1f){
             agent.isStopped = false;
             agent.SetDestination(idleSpot);
         }else{
             
-            
-                float targetHeight = 0f;
-                agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
+                Scan(5f, true);
+                float targetHeight = 0.1f;
+                if(agent.baseOffset != targetHeight){
+                    agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
+                }
                 agent.isStopped = true;
-                Scan(5f);
+                
+                
             
             
             
@@ -248,7 +252,7 @@ public class EnemyAI : MonoBehaviour
             targetSet = false;
 
             waittimer += Time.deltaTime;
-            Scan(5f);
+            Scan(5f, true);
             if(waittimer > waitTimeAtPoint){
                 waittimer = 0f;
                 currentPatrolIndex = (currentPatrolIndex+1)%patrolPoints.Count;
@@ -257,11 +261,14 @@ public class EnemyAI : MonoBehaviour
     }
     public void investigate(){
         agent.isStopped = false;
+        float targetHeight = 0.2f;
+        agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
+        Scan(5f, false);
     }
     public void Attack(){
         
     }
-    public void Scan(float radius){
+    public void Scan(float radius, bool CheckRandom){
         if(!hasScanTarget){
         float angle = Random.Range(0f,360f);
         float rad = angle * Mathf.Deg2Rad;
