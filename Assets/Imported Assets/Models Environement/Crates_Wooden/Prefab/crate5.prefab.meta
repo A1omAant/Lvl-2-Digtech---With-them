@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5c76500afefcb3143867e4c838b3d8fd
+timeCreated: 1481348024
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78011
+  packageName: Crates_Wooden
+  packageVersion: 1.0
+  assetPath: Assets/Crates_Wooden/Prefab/crate5.prefab
+  uploadId: 150650

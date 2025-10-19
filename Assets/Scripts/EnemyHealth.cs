@@ -3,8 +3,8 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
    [Header("References")]
-   public ParticleSystem sparks;
-   public ParticleSystem smoke;
+   //public ParticleSystem sparks;
+   //public ParticleSystem smoke;
 
    [Header("Health")]
    public float health;
@@ -18,8 +18,8 @@ public class EnemyHealth : MonoBehaviour
 
    private void Awake(){
         health = maxHealth;
-        smoke.Stop();
-        sparks.Stop();
+        //smoke.Stop();
+        //sparks.Stop();
 
    }
 
@@ -30,14 +30,7 @@ public class EnemyHealth : MonoBehaviour
         health -= damage;
         float HealthPercent = health/maxHealth;
 
-        if(HealthPercent < 0.66f && sparks != null && !sparks.isPlaying){
-            sparks.Play();
-
-        }
-        else if(HealthPercent < 0.33f && smoke != null && !smoke.isPlaying){
-            smoke.Play();
-        }
-        else if (HealthPercent <= 0f){
+       if (HealthPercent <= 0f){
             die();
         }
 

@@ -19,12 +19,14 @@ public class PlayerCam : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         Camera.main.fieldOfView = baseFOV;
+        Xsens = PlayerPrefs.GetFloat("MouseSensitivity", 1f);
+        Ysens = PlayerPrefs.GetFloat("MouseSensitivity", 1f);
 
     }
 
     private void Update(){
-        float MouseX = Input.GetAxisRaw("Mouse X");
-        float MouseY = Input.GetAxisRaw("Mouse Y");
+        float MouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * 100f;
+        float MouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * 100f;
 
         xRotation -= MouseY * Ysens/10;
         yRotation += MouseX * Xsens/10;

@@ -20,7 +20,7 @@ public class SoundSystem : MonoBehaviour
     }
 
     public void EmitSound(Vector3 position, float radius, float magnitude, float attenuationValue, bool AutoAlertInSphere, GameObject source){
-        //Debug.Log("Sound emitted SoundSystem");
+        Debug.Log("Sound emitted SoundSystem");
         Collider[] results = new Collider[32]; //new collider array up to 32 items
         int enemyLayerMask = LayerMask.GetMask("Enemy"); //enemy layermask
         if (enemyLayerMask == 0) {
@@ -34,7 +34,7 @@ public class SoundSystem : MonoBehaviour
             EnemyAI enemy = results[i].GetComponent<EnemyAI>(); // Get the EnemyAI component from the collider
             
             if (enemy != null) { // Check if the enemy exists
-            Debug.Log($"Found enemy: {enemy.name}"); 
+            //Debug.Log($"Found enemy: {enemy.name}"); 
                 if(!AutoAlertInSphere){ // If not auto-alerting in sphere
 
 
@@ -46,7 +46,7 @@ public class SoundSystem : MonoBehaviour
                         float volume = magnitude * (1 - normalizedDistance); // Calculate volume based on distance
                         volume = Mathf.Max(0, volume);// Ensure volume is not negative and not greater than intial magnitiude
                         enemy.OnSoundDetected(volume, position, source); // Notify enemy of detected sound
-                        //Debug.Log($"Sound emitted to enemy {enemy.name} with volume {volume}. In line of sight at position {position}");
+                        Debug.Log($"Sound emitted to enemy {enemy.name} with volume {volume}. In line of sight at position {position}");
                         //Debug.DrawRay(position, dir, Color.red, 0.5f);
                         //Debug.DrawLine(position, enemy.transform.position, Color.green, 0.5f);
                     }
@@ -61,7 +61,7 @@ public class SoundSystem : MonoBehaviour
                         volume *= (1-attenuationValue); // multiply by attenuation, fixed fraction of how absorband the wall is
                         volume = Mathf.Max(0, volume);// Ensure volume is not negative and not greater than intial magnitiude
                         enemy.OnSoundDetected(volume, position, source); // Notify enemy of detected sound
-                        //Debug.Log($"Sound emitted to enemy {enemy.name} with volume through obstacle {volume} at position {position}");
+                        Debug.Log($"Sound emitted to enemy {enemy.name} with volume through obstacle {volume} at position {position}");
                         //Debug.DrawRay(position, dir, Color.red, 0.5f);
                         //Debug.DrawLine(position, enemy.transform.position, Color.green, 0.5f);
                     }

@@ -58,13 +58,15 @@ public class EnemyAI : MonoBehaviour
     [Header("states")]
    
     public EnemyState state;
+    private EnemyHealth self;
 
     public enum EnemyState{
         Idle,
         Patroling,
         Alerted,
         Chasing,
-        Attacking
+        Attacking,
+        Stunned
     }
 
     
@@ -75,6 +77,11 @@ public class EnemyAI : MonoBehaviour
     private void Awake(){
         seen = false;
         agent = GetComponent<NavMeshAgent>();
+        self = GetComponent<EnemyHealth>();
+        state = EnemyState.Idle;
+        
+        //patrolPoints = new List<Transform>();
+
 
         if (patrolPoints.Count > 0)
         {
@@ -89,6 +96,7 @@ public class EnemyAI : MonoBehaviour
 
     
     private void Update(){
+        if(state != EnemyState.Stunned)
        
         PlayerInSight();
         SetState();
@@ -120,6 +128,7 @@ public class EnemyAI : MonoBehaviour
                 break;
             case EnemyState.Alerted:
                 investigate();
+                
                 agent.speed = AlertMoveSpeed;
                 break;
             case EnemyState.Chasing:
@@ -129,6 +138,9 @@ public class EnemyAI : MonoBehaviour
             case EnemyState.Attacking:
                 //Attack();
                 agent.speed = chasingSpeed;
+                break;
+            case EnemyState.Stunned:
+                //stun
                 break;
             default:
                 //handle werid things
@@ -152,7 +164,7 @@ public class EnemyAI : MonoBehaviour
 
         
         if(Physics.Raycast(transform.position, DirectionToPlayer.normalized, out RaycastHit hit, sightRange, ~0)){
-            Debug.Log($"hit {hit.transform.gameObject}");
+            //Debug.Log($"hit {hit.transform.gameObject}");
             if (hit.collider.gameObject != player.gameObject) return;
    
             if (DistanceToPlayer <= attackrange){
@@ -186,17 +198,20 @@ public class EnemyAI : MonoBehaviour
                 return;
             }
             else if (heardVolume > alertCutoff){
+                lastHeardPos = position;
                 state = EnemyState.Alerted; // investigate if player makes moderate noise
                 ShouldUpdatePos = true;
                 return;
             }
         }else{
             if (heardVolume > aggroCutoff){
+                lastHeardPos = position;
                 state = EnemyState.Alerted; // investigate if non player loud noise
                 ShouldUpdatePos = true;
                 return;
             }
             else if (heardVolume > alertCutoff){
+                lastHeardPos = position;
                 state = EnemyState.Alerted; // investigate if non player moderate noise
                 ShouldUpdatePos = true;
                 return;
@@ -218,7 +233,7 @@ public class EnemyAI : MonoBehaviour
         float distanceToIdle = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),new Vector3(idleSpot.x, 0, idleSpot.z));
 
         //Debug.Log(distanceToIdle);
-        if(distanceToIdle < 1f){
+        if(distanceToIdle > 1f){
             agent.isStopped = false;
             agent.SetDestination(idleSpot);
         }else{
@@ -248,7 +263,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         float distanceToPoint = Vector3.Distance(transform.position, targetpoint.position);
-        if(distanceToPoint <= 0.5f){
+        if(distanceToPoint <= 2f){
             targetSet = false;
 
             waittimer += Time.deltaTime;
@@ -260,14 +275,26 @@ public class EnemyAI : MonoBehaviour
         }
     }
     public void investigate(){
+
         agent.isStopped = false;
         float targetHeight = 0.2f;
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
-        Scan(5f, false);
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(lastHeardPos, out hit, 2f, NavMesh.AllAreas)) {
+        agent.SetDestination(hit.position);
+        }
+        float distanceToPoint = Vector3.Distance(transform.position, hit.position);
+
+        if(distanceToPoint <= 1f){
+            Scan(5f, false);
+        }
+
     }
+
     public void Attack(){
         
     }
+
     public void Scan(float radius, bool CheckRandom){
         if(!hasScanTarget){
         float angle = Random.Range(0f,360f);
@@ -288,5 +315,36 @@ public class EnemyAI : MonoBehaviour
             hasScanTarget = false; 
         }
 
+    }
+
+    public void OnMeleeHit(float damage, float duration, bool stun){
+        
+        if(stun){
+            StopAllCoroutines();
+            StartCoroutine(Stun(duration));
+        }
+        self.TakeDamage(damage);
+       // do a flinch animation or something
+    }
+
+    public void OnShotHit(float damage, bool stun, float duration ){
+        Debug.Log("Enemy hit by shot");
+        self.TakeDamage(damage);
+        if(stun){
+            StopAllCoroutines();
+            StartCoroutine(Stun(duration));
+        }
+        state = EnemyState.Chasing;
+        agent.isStopped = false;
+    }
+
+    public IEnumerator Stun(float duration){
+        state = EnemyState.Stunned;
+        agent.isStopped = true;
+        GetComponentInChildren<Renderer>().material.color = Color.yellow;
+        yield return new WaitForSeconds(duration);
+        GetComponentInChildren<Renderer>().material.color = Color.white;
+        state = EnemyState.Chasing;
+        agent.isStopped = false;
     }
 }

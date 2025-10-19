@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 87ea4a7d34817324e809ae364c643cc0
+timeCreated: 1481346939
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 78011
+  packageName: Crates_Wooden
+  packageVersion: 1.0
+  assetPath: Assets/Crates_Wooden/Materials/crate1.mat
+  uploadId: 150650
