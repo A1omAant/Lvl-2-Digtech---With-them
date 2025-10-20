@@ -10,6 +10,11 @@ public class PauseMenuController : MonoBehaviour
    public GameObject pauseMenuUI;
    public GameObject otherUI;
    public bool paused = false;
+   
+   void Awake(){
+  
+        DontDestroyOnLoad(gameObject);
+   }
 
    void Update()
    {

@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 3
   tags:
   - Enemy
+  - Player Controller
+  - Concrete
+  - Wood
   layers:
   - Default
   - TransparentFX

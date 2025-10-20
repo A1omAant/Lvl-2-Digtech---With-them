@@ -11,6 +11,7 @@ public class EnemyAI : MonoBehaviour
     public Transform player;
     public LayerMask whatIsGround, whatIsPlayer;
     public LayerMask obstructions;
+    public GameObject idlelocation;
     public Vector3 idleSpot; 
     public float IdleRotationSpeed;
     private Vector3 scanTarget;   
@@ -41,7 +42,7 @@ public class EnemyAI : MonoBehaviour
     public float aggroCutoffPlayer;
 
     [Header("Alert")]
-    public float AlertWaitTime;
+    public float AlertWaitTime = 15f;
     public float AlertMoveSpeed;
     public Vector3 lastHeardPos;
 
@@ -52,8 +53,18 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Attacking")]
     public float attackRange;
+    public float timeBetweenAttacks;
+    public float attackFollowDistance;
     public float attackDamage;
-    bool alreadyAttacked;
+    bool alreadyAttacked = false;
+
+    [Header("Audio")]
+    public List<AudioClip> alertSounds;
+    public List<AudioClip> chaseSounds;
+    public List<AudioClip> attackSounds;
+    public List<AudioClip> idleSounds;
+    public AudioSource EnemyAudioSource;
+
     
     [Header("states")]
    
@@ -90,21 +101,17 @@ public class EnemyAI : MonoBehaviour
         }
         player = GameObject.Find("Player Controller").transform;
         LayerMask whatIsPlayer = LayerMask.GetMask("Player");
+        idleSpot = idlelocation.transform.position;
 
     }
 
 
     
     private void Update(){
-        if(state != EnemyState.Stunned)
-       
+
         PlayerInSight();
-        SetState();
-
-
-        
-            
-    }
+        SetState();    
+        }
 
     private void PlayerInSight(){
          
@@ -115,6 +122,42 @@ public class EnemyAI : MonoBehaviour
             CanSeePlayer(player);
         }
 
+    }
+
+    public void HandleAudio(){
+        if(!EnemyAudioSource.isPlaying){
+            switch(state){
+                case EnemyState.Idle:
+                    if(idleSounds.Count > 0){
+                        EnemyAudioSource.clip = idleSounds[Random.Range(0, idleSounds.Count)];
+                        EnemyAudioSource.Play();
+                    }
+                    break;
+                case EnemyState.Patroling:
+                    //patrol sounds
+                    break;
+                case EnemyState.Alerted:
+                    if(alertSounds.Count > 0){
+                        EnemyAudioSource.clip = alertSounds[Random.Range(0, alertSounds.Count)];
+                        EnemyAudioSource.Play();
+                    }
+                    break;
+                case EnemyState.Chasing:
+                    if(chaseSounds.Count > 0){
+                        EnemyAudioSource.clip = chaseSounds[Random.Range(0, chaseSounds.Count)];
+                        EnemyAudioSource.Play();
+                    }
+                    break;
+                case EnemyState.Attacking:
+                    if(attackSounds.Count > 0){
+                        EnemyAudioSource.clip = attackSounds[Random.Range(0, attackSounds.Count)];
+                        EnemyAudioSource.Play();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     void SetState(){
@@ -179,8 +222,14 @@ public class EnemyAI : MonoBehaviour
         return;
     }
 
-    public void OnSoundDetected(float volume, Vector3 position, GameObject source)
+    public void OnSoundDetected(float volume, Vector3 position, GameObject source, bool alertinsphere)
     {
+        if (alertinsphere)
+        {
+            state = EnemyState.Chasing;
+            return;
+        }
+
         bool ShouldUpdatePos = false;
         float heardVolume = volume * hearingSense;
         Debug.Log($"Enemy {name} detected sound with volume {heardVolume} at position {position} from gameobject {source}");
@@ -223,7 +272,10 @@ public class EnemyAI : MonoBehaviour
     public void chasePlayer(){
         agent.isStopped = false;
         float targetHeight = 0.3f;
+
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
+
+
         agent.SetDestination(player.position);
     }
   
@@ -231,9 +283,17 @@ public class EnemyAI : MonoBehaviour
 
 
         float distanceToIdle = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),new Vector3(idleSpot.x, 0, idleSpot.z));
+        Scan(5f, true);
+        Debug.Log(distanceToIdle);
+        Debug.Log(agent.isStopped);
 
-        //Debug.Log(distanceToIdle);
-        if(distanceToIdle > 1f){
+        //check if idlespot is on navmesh
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(idleSpot, out hit, 2f, NavMesh.AllAreas)) { // 2f is the max distance to sample
+            idleSpot = hit.position; // snap to navmesh position
+        }
+
+        if(distanceToIdle > 5f){
             agent.isStopped = false;
             agent.SetDestination(idleSpot);
         }else{
@@ -285,17 +345,48 @@ public class EnemyAI : MonoBehaviour
         }
         float distanceToPoint = Vector3.Distance(transform.position, hit.position);
 
-        if(distanceToPoint <= 1f){
+        if(distanceToPoint <= 5f){
             Scan(5f, false);
+            AlertWaitTime -= Time.deltaTime;
+            if(AlertWaitTime <= 0f){
+                AlertWaitTime = 15f;
+                state = EnemyState.Idle;
+            }
         }
+
+
 
     }
 
     public void Attack(){
+
         
+        transform.LookAt(player);
+
+        if(!alreadyAttacked){
+
+            //attack code here
+            Debug.Log("Enemy Attacking Player");
+            //Damage player
+            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+            if(playerHealth != null){
+                playerHealth.TakeDamage(attackDamage);
+            }
+
+            alreadyAttacked = true;
+            Invoke(nameof(ResetAttack), timeBetweenAttacks);
+        }
+
+        state = EnemyState.Chasing;
+
+        
+    }
+    private void ResetAttack(){
+        alreadyAttacked = false;
     }
 
     public void Scan(float radius, bool CheckRandom){
+        agent.isStopped = false;
         if(!hasScanTarget){
         float angle = Random.Range(0f,360f);
         float rad = angle * Mathf.Deg2Rad;
@@ -339,6 +430,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     public IEnumerator Stun(float duration){
+        Debug.Log("Enemy Stunned");
         state = EnemyState.Stunned;
         agent.isStopped = true;
         GetComponentInChildren<Renderer>().material.color = Color.yellow;

@@ -95,7 +95,14 @@ public class PlayerMovement : MonoBehaviour
         
         
 
-
+    public string GroudTypeCheck(){
+        RaycastHit hit;
+        if(Physics.Raycast(transform.position, Vector3.down, out hit, playerHeight * 0.5f + 0.3f, whatIsGround)){
+            Debug.Log("Ground type: " + hit.collider.tag);
+            return hit.collider.tag.ToString();
+        }
+        return "Untagged";
+    }
 
        
 
@@ -147,6 +154,12 @@ public class PlayerMovement : MonoBehaviour
 
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
+
+        if(horizontalInput > 0 || horizontalInput < 0 || verticalInput > 0 || verticalInput < 0){
+           GameplayAudio.Instance?.PlayFootstep(GroudTypeCheck(), state.ToString());
+           Debug.Log("Playing footstep sound for " + GroudTypeCheck() + " while " + state.ToString());
+        }
+
 
 
         if(Input.GetKeyDown(crouchKey)){

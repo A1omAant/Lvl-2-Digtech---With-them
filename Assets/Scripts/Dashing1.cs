@@ -74,6 +74,8 @@ public class Dashing1 : MonoBehaviour
 
         Vector3 forceToApply = direction * dashForce + orientation.up * dashUpwardForce;
 
+        GameplayAudio.Instance?.PlayGameplaySFX("Dash");
+
         if(disableGravity){
             rb.useGravity=false;
         }

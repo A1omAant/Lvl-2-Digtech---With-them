@@ -13,9 +13,11 @@ public class SettingsManager : MonoBehaviour
     public Toggle invertYToggle;
     public float ScreenWidth { get; private set; } = 1920;
     public float ScreenHeight { get; private set; } = 1080;
+    
 
     private void Awake()
     {
+        
         if (Instance == null)
         {
             Instance = this;
@@ -50,6 +52,7 @@ public class SettingsManager : MonoBehaviour
         Debug.Log($"Mouse Sensitivity set to: {MouseSensitivity}");
         PlayerPrefs.SetFloat("MouseSensitivity", sensitivity);
         PlayerPrefs.Save();
+        
 
     }
 

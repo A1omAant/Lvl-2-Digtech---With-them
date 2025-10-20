@@ -16,9 +16,9 @@ Material:
   - _NORMALMAP
   m_InvalidKeywords: []
   m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
+  m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 1981
   stringTagMap:
     RenderType: Opaque
   disabledShaderPasses:
@@ -217,7 +217,7 @@ Material:
     - _PaintSmooth: 0.06668227
     - _PaintSmoothness: 0.1882353
     - _Parallax: 0.02
-    - _QueueOffset: 0
+    - _QueueOffset: -19
     - _ReceiveShadows: 1
     - _Scale: 0.81580454
     - _ScaleFlat: 1.9530317

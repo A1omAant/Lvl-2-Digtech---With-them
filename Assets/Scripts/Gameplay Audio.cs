@@ -12,7 +12,10 @@ public class GameplayAudio : MonoBehaviour
 
     public AudioSource GameplayAudioSource;
     public AudioSource HeartBeatAudioSource;
+    public AudioSource FootstepAudioSource;
     public List<AudioClip> GameplayAudioClips;
+    public List<AudioClip> HeartBeatAudioClips;
+    public List<AudioClip> FootstepAudioClips;
 
     private void Awake()
     {
@@ -49,8 +52,33 @@ public class GameplayAudio : MonoBehaviour
     public void PlayHeartBeat()
     {
         if(!HeartBeatAudioSource.isPlaying){
-            HeartBeatAudioSource.PlayOneShot(GameplayAudioClips.Find(c => c.name == "HeartBeat"));
+            AudioClip clip = HeartBeatAudioClips.Find(c => c.name == "HeartBeat_" + Random.Range(1,4).ToString());
+            HeartBeatAudioSource.PlayOneShot(clip);
         }
+    }
+
+    public void PlayFootstep(string surfaceType, string speed){
+
+
+            AudioClip clip = FootstepAudioClips.Find(c => c.name == surfaceType + "_Footstep_" + Random.Range(1,4).ToString());
+            if (clip != null){
+                float pitchVariation = Random.Range(0.9f, 1.1f);
+                FootstepAudioSource.pitch = pitchVariation;
+
+                if(speed == "Crouch"){
+                    FootstepAudioSource.volume = 0.2f;
+                } else if(speed == "Walk"){
+                    FootstepAudioSource.volume = 0.5f;
+                } else if(speed == "Run"){
+                    FootstepAudioSource.volume = 1f;
+                }
+
+                FootstepAudioSource.PlayOneShot(clip);
+            }
+            else
+            {
+                Debug.LogWarning("Footstep clip not found for surface type: " + surfaceType);
+            }
     }
 
 }

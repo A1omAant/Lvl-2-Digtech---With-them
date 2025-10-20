@@ -45,7 +45,7 @@ public class SoundSystem : MonoBehaviour
                         float normalizedDistance = (distance / radius); // Normalize distance
                         float volume = magnitude * (1 - normalizedDistance); // Calculate volume based on distance
                         volume = Mathf.Max(0, volume);// Ensure volume is not negative and not greater than intial magnitiude
-                        enemy.OnSoundDetected(volume, position, source); // Notify enemy of detected sound
+                        enemy.OnSoundDetected(volume, position, source, AutoAlertInSphere); // Notify enemy of detected sound
                         Debug.Log($"Sound emitted to enemy {enemy.name} with volume {volume}. In line of sight at position {position}");
                         //Debug.DrawRay(position, dir, Color.red, 0.5f);
                         //Debug.DrawLine(position, enemy.transform.position, Color.green, 0.5f);
@@ -60,7 +60,7 @@ public class SoundSystem : MonoBehaviour
                         float volume = volumeToObstacle* (1 - distEnemyFromObstacle/radius); // Calculate volume based on distance from wall to enemy and the volume to the wall
                         volume *= (1-attenuationValue); // multiply by attenuation, fixed fraction of how absorband the wall is
                         volume = Mathf.Max(0, volume);// Ensure volume is not negative and not greater than intial magnitiude
-                        enemy.OnSoundDetected(volume, position, source); // Notify enemy of detected sound
+                        enemy.OnSoundDetected(volume, position, source, AutoAlertInSphere); // Notify enemy of detected sound
                         Debug.Log($"Sound emitted to enemy {enemy.name} with volume through obstacle {volume} at position {position}");
                         //Debug.DrawRay(position, dir, Color.red, 0.5f);
                         //Debug.DrawLine(position, enemy.transform.position, Color.green, 0.5f);
@@ -70,7 +70,7 @@ public class SoundSystem : MonoBehaviour
                 }
             }else{
                 float volume = magnitude; // if autodetect, no math, enemy gets propagated initial magnitude regardless of obsticals or line of sight
-                enemy.OnSoundDetected(volume, position, source); // Notify enemy of detected sound
+                enemy.OnSoundDetected(volume, position, source, AutoAlertInSphere); // Notify enemy of detected sound
             }
             }
 

@@ -1,4 +1,9 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+using System.Collections.Generic;
+
 
 public class PlayerShootHitScan : MonoBehaviour
 {
@@ -7,6 +12,10 @@ public class PlayerShootHitScan : MonoBehaviour
     public Transform origin;
     public Camera camera;
     public KeyCode shoot = KeyCode.Mouse0;
+    public Slider ammoSlider;
+    public TextMeshProUGUI ammoText;
+    public TextMeshProUGUI heldAmmoText;
+   
 
     [Header("shooting affinities")]
     public float damage = 20f;
@@ -21,6 +30,9 @@ public class PlayerShootHitScan : MonoBehaviour
     public float HeldAmmo = 16f;
     public bool isReloading = false;
     public bool fullAuto = false;
+    public bool AutoAlert = true;
+    public bool AlertsEnemies = true;
+
 
     private void Awake(){
         if (camera == null)
@@ -28,7 +40,11 @@ public class PlayerShootHitScan : MonoBehaviour
     }
 
     public void Update(){
-
+        ammoSlider.value = ammo;
+        ammoText.text = Mathf.RoundToInt(ammo).ToString() + " | " + Mathf.RoundToInt(maxAmmo).ToString();
+        heldAmmoText.text = " | " + Mathf.RoundToInt(HeldAmmo).ToString();
+   
+        if(isReloading) return;
        ShootInput();
        ReloadInput();
     }
@@ -37,6 +53,10 @@ public class PlayerShootHitScan : MonoBehaviour
         
         RaycastHit hit;
         ammo -= 1f;
+        if(AlertsEnemies){
+            SoundSystem.Instance.EmitSound(origin.position, 40f, 200f, 0.7f, AutoAlert, gameObject);
+        }
+        Debug.Log("Shot fired! with sound emitted.");
         if(ammo < 0f){
             ammo = 0f;
             Debug.Log("Out of ammo!");
@@ -72,10 +92,12 @@ public class PlayerShootHitScan : MonoBehaviour
                 Debug.Log("Reloading...");
                 isReloading = true;
                 if(ammo <= 0f){
+                    ammoText.text =  " 0 | " + Mathf.RoundToInt(maxAmmo).ToString();
                     Invoke("Reload", reloadEmptyTimer);
                     GameplayAudio.Instance?.PlayGameplaySFX("IAmReloading");
                     GameplayAudio.Instance?.PlayGameplaySFX("reloading from empty");
                 }else{
+                    ammoText.text =  " 0 | " + Mathf.RoundToInt(maxAmmo).ToString();
                     Invoke("Reload", reloadTime);
                     GameplayAudio.Instance?.PlayGameplaySFX("reload");
                 }
@@ -84,14 +106,20 @@ public class PlayerShootHitScan : MonoBehaviour
     }
 
     private void Reload(){
-        
-        if(HeldAmmo < maxAmmo){
-            ammo += HeldAmmo;
-            HeldAmmo = 0f;
+
+        if(HeldAmmo <= 0f){
+            Debug.Log("No held ammo to reload!");
         }else{
-            HeldAmmo -= (maxAmmo - ammo);
-            ammo = maxAmmo;
+            float ammoNeeded = maxAmmo - ammo;
+            if(HeldAmmo >= ammoNeeded){
+                ammo += ammoNeeded;
+                HeldAmmo -= ammoNeeded;
+            }else{
+                ammo += HeldAmmo;
+                HeldAmmo = 0f;
+            }
         }
+
         isReloading = false;
         Debug.Log("Reloaded!");
     }

@@ -19,15 +19,18 @@ public class PlayerCam : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         Camera.main.fieldOfView = baseFOV;
-        Xsens = PlayerPrefs.GetFloat("MouseSensitivity", 1f);
-        Ysens = PlayerPrefs.GetFloat("MouseSensitivity", 1f);
+        Xsens = PlayerPrefs.GetFloat("MouseSensitivity", 20f);
+        Ysens = PlayerPrefs.GetFloat("MouseSensitivity", 20f);
 
     }
 
     private void Update(){
         float MouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * 100f;
         float MouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * 100f;
-
+        if(SettingsManager.Instance != null){
+            Xsens = SettingsManager.Instance.MouseSensitivity;
+            Ysens = SettingsManager.Instance.MouseSensitivity;
+        }
         xRotation -= MouseY * Ysens/10;
         yRotation += MouseX * Xsens/10;
 
@@ -43,6 +46,13 @@ public class PlayerCam : MonoBehaviour
     {
         
         StartCoroutine(AdjustFieldOfView(targetFOV, duration));
+    }
+
+    public void UpdateSensitivity(float newSensitivity)
+    {
+        Xsens = newSensitivity;
+        Ysens = newSensitivity;
+        PlayerPrefs.SetFloat("MouseSensitivity", newSensitivity);
     }
 
     private IEnumerator AdjustFieldOfView( float targetFOV, float duration)

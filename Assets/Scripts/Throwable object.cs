@@ -80,9 +80,12 @@ public class Throwableobject : MonoBehaviour
         }
         if(IsAmmo){
             if(Inrange && Input.GetKeyDown(pickupKey)){
-                PlayerShootHitScan playerShoot = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerShootHitScan>();
+                Debug.Log("Picked up ammo box");
+                PlayerShootHitScan playerShoot = GameObject.FindGameObjectWithTag("Player Controller").GetComponent<PlayerShootHitScan>();
+                Debug.Log("Found player shoot script: " + (playerShoot != null));
                 if(playerShoot != null){
                     playerShoot.AddAmmo(8f);
+                    Debug.Log("Added ammo to player");
                     GameplayAudio.Instance?.PlayGameplaySFX("AmmoBox");
                     Destroy(gameObject);
                     return;
@@ -93,7 +96,7 @@ public class Throwableobject : MonoBehaviour
 
         if(IsHealthPack){
             if(Inrange && Input.GetKeyDown(pickupKey)){
-                PlayerHealth playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerHealth>();
+                PlayerHealth playerHealth = GameObject.FindGameObjectWithTag("Player Controller").GetComponent<PlayerHealth>();
                 if(playerHealth != null){
                     if( playerHealth.currentHealth >= playerHealth.maxHealth){
                         return;
@@ -220,16 +223,21 @@ public class Throwableobject : MonoBehaviour
 private void OnCollisionEnter(Collision collision)
     {
         if(IsThrown){
+            GameplayAudio.Instance?.PlayGameplaySFX("Melee");
+            Debug.Log("Throwable object collided with " + collision.gameObject.name);
             IsThrown=false; 
             if(collision.gameObject.CompareTag("Player")){
                 return;
             }
             if(collision.gameObject.CompareTag("Enemy")){
+                SoundSystem.Instance.EmitSound(transform.position, 300f, 2000f, 0.7f, false, gameObject);
+                GameplayAudio.Instance?.PlayGameplaySFX("shoot");
                 EnemyAI enemy = collision.gameObject.GetComponent<EnemyAI>();
                 if(enemy != null){
-                    enemy.OnShotHit(20f, true, 3f);
+                    enemy.OnShotHit(50f, true, 150f);
             }
-            SoundSystem.Instance.EmitSound(transform.position, 40f, 200f, 0.7f, true, gameObject);
+            //SoundSystem.Instance.EmitSound(transform.position, 40f, 200f, 0.7f, true, gameObject);
+            SoundSystem.Instance.EmitSound(transform.position, 300f, 2000f, 0.7f, false, gameObject);
             Debug.Log("Thrown object emmited sound at " + transform.position);
         }
     }
