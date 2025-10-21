@@ -197,7 +197,11 @@ public class EnemyAI : MonoBehaviour
         float DistanceToPlayer = DirectionToPlayer.magnitude;
 
         if(DistanceToPlayer > sightRange){
+            if(state == EnemyState.Attacking){
+                state = EnemyState.Chasing;
+            }
             return;
+
         }
 
         float AngleToPlayer = Vector3.Angle(transform.forward, DirectionToPlayer);
