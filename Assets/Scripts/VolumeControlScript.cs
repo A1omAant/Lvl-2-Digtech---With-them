@@ -13,32 +13,34 @@ public class VolumeControlScript : MonoBehaviour
     public Button restoreDefaultsButton;
 
     void Awake()
-{
-    DontDestroyOnLoad(gameObject);
-}
+    {
+    }
 
 
     private void Start()
     {
+        InitializeSliders();
+
+      
+    }
+    void InitializeSliders(){
         // Load saved volume settings
-        float masterVolume = PlayerPrefs.GetFloat("Master", 0.75f);
-        float sfxVolume = PlayerPrefs.GetFloat("SFX", 0.75f);
-        float musicVolume = PlayerPrefs.GetFloat("Music", 0.75f);
-
-
         masterSlider.onValueChanged.AddListener(SetMasterVolume);
-        sfxSlider.onValueChanged.AddListener(SetSFXVolume);
-        musicSlider.onValueChanged.AddListener(SetMusicVolume);
-
-        masterSlider.value = masterVolume;
-        sfxSlider.value = sfxVolume;
-        musicSlider.value = musicVolume;
-
-        SetMasterVolume(masterVolume);
-        SetSFXVolume(sfxVolume);
-        SetMusicVolume(musicVolume);
-
         
+        masterSlider.value = PlayerPrefs.GetFloat("Master", 0.75f);
+        sfxSlider.onValueChanged.AddListener(SetSFXVolume);
+        sfxSlider.value = PlayerPrefs.GetFloat("SFX", 0.75f);
+        musicSlider.onValueChanged.AddListener(SetMusicVolume);
+        musicSlider.value = PlayerPrefs.GetFloat("Music", 0.75f);
+        restoreDefaultsButton.onClick.AddListener(OnRestoreDefaultsButtonPressed);
+        
+
+
+        SetMasterVolume(masterSlider.value);
+        SetSFXVolume(sfxSlider.value);
+        SetMusicVolume(musicSlider.value);
+
+
     }
 
     public void SetMasterVolume(float volume)

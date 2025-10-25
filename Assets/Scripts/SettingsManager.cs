@@ -7,10 +7,10 @@ public class SettingsManager : MonoBehaviour
 {
 
     public static SettingsManager Instance;
-    public float MouseSensitivity { get; private set; } = 1f;
+    public float MouseSensitivity { get; private set; } = 30f;
     public bool InvertY { get; private set; } = false;
-    public Slider mouseSensitivitySlider;
-    public Toggle invertYToggle;
+    //public Slider mouseSensitivitySlider;
+    //public Toggle invertYToggle;
     public float ScreenWidth { get; private set; } = 1920;
     public float ScreenHeight { get; private set; } = 1080;
     
@@ -29,13 +29,30 @@ public class SettingsManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        if (mouseSensitivitySlider != null)
-        {
-            mouseSensitivitySlider.value = MouseSensitivity;
-            mouseSensitivitySlider.onValueChanged.AddListener(SetMouseSensitivity);
+        
+    }
+    /*
+    private void Start()
+    {
+        if(mouseSensitivitySlider != null && invertYToggle != null){
+            InitialiseSliders();
         }
     }
+    */
 
+    /*
+    public void InitialiseSliders(){
+        mouseSensitivitySlider.onValueChanged.AddListener(SetMouseSensitivity);
+        mouseSensitivitySlider.value = PlayerPrefs.GetFloat("MouseSensitivity", 30f);
+        invertYToggle.onValueChanged.AddListener(SetInvertY);
+        invertYToggle.isOn = PlayerPrefs.GetInt("InvertY", 0) == 1;
+
+        SetMouseSensitivity(mouseSensitivitySlider.value);
+        SetInvertY(invertYToggle.isOn);
+        SetScreenResolution(ScreenWidth, ScreenHeight);
+
+    }
+    
     private void OnDestroy()
     {
         if (mouseSensitivitySlider != null)
@@ -43,6 +60,7 @@ public class SettingsManager : MonoBehaviour
             mouseSensitivitySlider.onValueChanged.RemoveListener(SetMouseSensitivity);
         }
     }
+    */
 
  
 
@@ -72,12 +90,13 @@ public class SettingsManager : MonoBehaviour
         Screen.SetResolution((int)width, (int)height, Screen.fullScreen);
         PlayerPrefs.SetFloat("ScreenWidth", width);
         PlayerPrefs.SetFloat("ScreenHeight", height);
+
         PlayerPrefs.Save();
     }
 
     public void LoadSettings()
     {
-        MouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 1f);
+        MouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 30f);
         InvertY = PlayerPrefs.GetInt("InvertY", 0) == 1;
         ScreenWidth = PlayerPrefs.GetFloat("ScreenWidth", 1920);
         ScreenHeight = PlayerPrefs.GetFloat("ScreenHeight", 1080);
@@ -87,7 +106,7 @@ public class SettingsManager : MonoBehaviour
         Debug.Log($"Invert Y: {InvertY}");
         Debug.Log($"Screen Resolution: {ScreenWidth}x{ScreenHeight}");
     }
-
+    /*
     public void SetMouseSensitivityFromSlider(float value)
     {
         if (mouseSensitivitySlider != null)
@@ -95,6 +114,7 @@ public class SettingsManager : MonoBehaviour
             SetMouseSensitivity(mouseSensitivitySlider.value);
         }
     }
+    */
 
 
 

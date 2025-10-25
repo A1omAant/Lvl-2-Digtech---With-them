@@ -1,5 +1,8 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine.UI;
 
 public class Throwableobject : MonoBehaviour
 
@@ -12,6 +15,8 @@ public class Throwableobject : MonoBehaviour
     public float pickupRange;
     public KeyCode pickupKey = KeyCode.T;
     public bool Inrange;
+    public bool IsFlare = false;
+    public GameObject flareObject;
 
     [Header("Throw Settings")]
     public KeyCode throwKey = KeyCode.Mouse1;
@@ -30,6 +35,17 @@ public class Throwableobject : MonoBehaviour
     public GameObject HighlightMesh;
     [SerializeField] 
     private LineRenderer lineRenderer;
+
+    [Header("Note Settings")]
+    public bool IsNote = false;
+    public string NoteText;
+    public TextMeshProUGUI NoteTextUI;
+    public GameObject NoteUI;
+    public PauseMenuController pauseMenuController;
+
+    [Header("WinCondition Settings")]
+    public bool IsWinCondition = false;
+    public GameObject WinConditionUI;
 
     private Rigidbody rb;
     public bool isHeld = false;
@@ -93,6 +109,22 @@ public class Throwableobject : MonoBehaviour
             }
             return;
         }
+        if(IsNote){
+            if(Inrange && Input.GetKeyDown(pickupKey)){
+                pauseMenuController.Note();
+                NoteTextUI.text = NoteText;
+                GameplayAudio.Instance?.PlayGameplaySFX("Pickup Note");
+            }
+            return;
+        }
+
+        if(IsWinCondition){
+            if(Inrange && Input.GetKeyDown(pickupKey)){
+                pauseMenuController.WinGame();
+                GameplayAudio.Instance?.PlayGameplaySFX("WinGame");
+            }
+            return;
+        }
 
         if(IsHealthPack){
             if(Inrange && Input.GetKeyDown(pickupKey)){
@@ -132,6 +164,11 @@ public class Throwableobject : MonoBehaviour
        }
     }
 
+    public void CloseNoteUI(){
+        NoteUI.SetActive(false);
+        Time.timeScale = 1f;
+    }
+
     private void Inputs(){
         if (Input.GetKeyDown(pickupKey)) {
             if (!isHeld){
@@ -154,6 +191,10 @@ public class Throwableobject : MonoBehaviour
         
 
         if(distance <= pickupRange * pickupRange && !isHeld){
+            if(IsFlare){
+                flareObject.SetActive(true);
+                GameplayAudio.Instance?.PlayGameplaySFX("FlarePickup");
+            }
             isHeld = true;
             rb.useGravity = false;
             rb.isKinematic = true;
@@ -171,9 +212,11 @@ public class Throwableobject : MonoBehaviour
         transform.SetParent(null);
         if(physicsDrop){
             rb.useGravity = true;
+
         }else{
             transform.position = originalPosition;
             transform.rotation = originalRotation;
+            GameplayAudio.Instance?.PlayGameplaySFX("Item Putdown");
         }
     }
 
@@ -223,7 +266,8 @@ public class Throwableobject : MonoBehaviour
 private void OnCollisionEnter(Collision collision)
     {
         if(IsThrown){
-            GameplayAudio.Instance?.PlayGameplaySFX("Melee");
+            SoundSystem.Instance.EmitSound(transform.position, 300f, 2000f, 0.7f, false, gameObject);
+            GameplayAudio.Instance?.PlayGameplaySFX("ThrownItemNotEnemy");
             Debug.Log("Throwable object collided with " + collision.gameObject.name);
             IsThrown=false; 
             if(collision.gameObject.CompareTag("Player")){
@@ -231,13 +275,13 @@ private void OnCollisionEnter(Collision collision)
             }
             if(collision.gameObject.CompareTag("Enemy")){
                 SoundSystem.Instance.EmitSound(transform.position, 300f, 2000f, 0.7f, false, gameObject);
-                GameplayAudio.Instance?.PlayGameplaySFX("shoot");
+                GameplayAudio.Instance?.PlayGameplaySFX("Melee");
                 EnemyAI enemy = collision.gameObject.GetComponent<EnemyAI>();
                 if(enemy != null){
                     enemy.OnShotHit(50f, true, 150f);
             }
             //SoundSystem.Instance.EmitSound(transform.position, 40f, 200f, 0.7f, true, gameObject);
-            SoundSystem.Instance.EmitSound(transform.position, 300f, 2000f, 0.7f, false, gameObject);
+            
             Debug.Log("Thrown object emmited sound at " + transform.position);
         }
     }

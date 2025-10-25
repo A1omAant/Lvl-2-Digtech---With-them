@@ -8,6 +8,8 @@ TagManager:
   - Player Controller
   - Concrete
   - Wood
+  - Metal
+  - Gravel
   layers:
   - Default
   - TransparentFX

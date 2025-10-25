@@ -168,6 +168,7 @@ Material:
     - _SmoothnessOffset: {r: 0.2, g: 0.27, b: 0.2, a: 0.4}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!114 &3183881553776797525
 MonoBehaviour:
   m_ObjectHideFlags: 11

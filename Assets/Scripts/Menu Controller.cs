@@ -16,7 +16,7 @@ public class MenuController : MonoBehaviour
    public void Awake(){
         mainMenuUI.SetActive(true);
         optionMenuUI.SetActive(false);
-        DontDestroyOnLoad(gameObject);
+       
    }
 
 

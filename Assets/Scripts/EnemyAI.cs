@@ -29,7 +29,6 @@ public class EnemyAI : MonoBehaviour
     [Header("Detection Visual")]
     public float sightRange;
     public float alertRange;
-    public float attackrange;
     public float aggroRange;
     public float sightAngle;
     public bool PlayerInSightRange, PlayerInAttackRange;
@@ -49,6 +48,9 @@ public class EnemyAI : MonoBehaviour
     [Header("Chasing")]
     public float chasingSpeed;
     public float chasingMaxDistance; //optional, might amke it so they can only for max distance away from their position stored from their last state
+    public float LostSightDuration = 5f;
+    public float lostSightTimer = 0f;
+    bool canSee = false;
 
 
     [Header("Attacking")]
@@ -57,6 +59,12 @@ public class EnemyAI : MonoBehaviour
     public float attackFollowDistance;
     public float attackDamage;
     bool alreadyAttacked = false;
+    public ParticleSystem attackEffect;
+    public Transform attackPoint;
+    
+    [Header("Idle Settings")]
+    public bool idleScan;
+    public GameObject DroneLight;
 
     [Header("Audio")]
     public List<AudioClip> alertSounds;
@@ -70,6 +78,7 @@ public class EnemyAI : MonoBehaviour
    
     public EnemyState state;
     private EnemyHealth self;
+    private EnemyState previousState;
 
     public enum EnemyState{
         Idle,
@@ -77,7 +86,8 @@ public class EnemyAI : MonoBehaviour
         Alerted,
         Chasing,
         Attacking,
-        Stunned
+        Stunned,
+        Dead
     }
 
     
@@ -108,10 +118,13 @@ public class EnemyAI : MonoBehaviour
 
     
     private void Update(){
-
+        CheckHealth();
+        if(state != EnemyState.Dead) {
+        HandleAudio();
         PlayerInSight();
         SetState();    
         }
+    } 
 
     private void PlayerInSight(){
          
@@ -130,7 +143,7 @@ public class EnemyAI : MonoBehaviour
                 case EnemyState.Idle:
                     if(idleSounds.Count > 0){
                         EnemyAudioSource.clip = idleSounds[Random.Range(0, idleSounds.Count)];
-                        EnemyAudioSource.Play();
+                        //EnemyAudioSource.Play();
                     }
                     break;
                 case EnemyState.Patroling:
@@ -139,7 +152,7 @@ public class EnemyAI : MonoBehaviour
                 case EnemyState.Alerted:
                     if(alertSounds.Count > 0){
                         EnemyAudioSource.clip = alertSounds[Random.Range(0, alertSounds.Count)];
-                        EnemyAudioSource.Play();
+                        //EnemyAudioSource.Play();
                     }
                     break;
                 case EnemyState.Chasing:
@@ -149,11 +162,15 @@ public class EnemyAI : MonoBehaviour
                     }
                     break;
                 case EnemyState.Attacking:
-                    if(attackSounds.Count > 0){
-                        EnemyAudioSource.clip = attackSounds[Random.Range(0, attackSounds.Count)];
-                        EnemyAudioSource.Play();
-                    }
+                    //attack sounds handled in attack function
                     break;
+                case EnemyState.Stunned:
+                    //stun sounds
+                    break;
+                case EnemyState.Dead:
+                    //death sounds
+                    break;
+                
                 default:
                     break;
             }
@@ -179,11 +196,14 @@ public class EnemyAI : MonoBehaviour
                 agent.speed = chasingSpeed;
                 break;
             case EnemyState.Attacking:
-                //Attack();
+                Attack();
                 agent.speed = chasingSpeed;
                 break;
             case EnemyState.Stunned:
                 //stun
+                break;
+            case EnemyState.Dead:
+                //dead
                 break;
             default:
                 //handle werid things
@@ -195,42 +215,67 @@ public class EnemyAI : MonoBehaviour
     private void CanSeePlayer(Transform player){
         Vector3 DirectionToPlayer = player.position - transform.position;
         float DistanceToPlayer = DirectionToPlayer.magnitude;
+        float AngleToPlayer = Vector3.Angle(transform.forward, DirectionToPlayer);
 
-        if(DistanceToPlayer > sightRange){
-            if(state == EnemyState.Attacking){
-                state = EnemyState.Chasing;
+
+        if(DistanceToPlayer <= sightRange && AngleToPlayer <= sightAngle/2f){
+            
+            if (Physics.Raycast(transform.position, DirectionToPlayer.normalized, out RaycastHit hit, sightRange, ~0))
+            {
+                Debug.Log($"Raycast hit {hit.transform.gameObject}");
+                canSee = hit.collider.gameObject == player.gameObject;
             }
-            return;
 
         }
+        
+        if(canSee){
+             
+            if(state == EnemyState.Idle && !idleScan){ // if idle and not scanning, don't notice player visually
+                return;
+            }
+            //Debug.Log($"hit {hit.transform.gameObject}");
+            lostSightTimer = 0f;
+            if(DistanceToPlayer <= attackRange){
+                state = EnemyState.Attacking; // attack if very close
+            }else if (DistanceToPlayer <= aggroRange){
+                state = EnemyState.Chasing; // chase if seen but close
+            }
 
-        float AngleToPlayer = Vector3.Angle(transform.forward, DirectionToPlayer);
-        if(AngleToPlayer > sightAngle/2f){
-            return;
+        }else if(state == EnemyState.Chasing || state == EnemyState.Attacking){
+            lostSightTimer += Time.deltaTime;
+            if(lostSightTimer >= LostSightDuration){
+                state = EnemyState.Idle; // go to idle if lost sight for too long
+            }
         }
 
         
-        if(Physics.Raycast(transform.position, DirectionToPlayer.normalized, out RaycastHit hit, sightRange, ~0)){
-            //Debug.Log($"hit {hit.transform.gameObject}");
-            if (hit.collider.gameObject != player.gameObject) return;
-   
-            if (DistanceToPlayer <= attackrange){
-                state = EnemyState.Attacking; // attack if very close and seen
-            }else if (DistanceToPlayer <= aggroRange){
-                state = EnemyState.Chasing; // chase if seen but close
-            }else if (DistanceToPlayer <= alertRange){
-                state = EnemyState.Alerted; // alert if seen but far
-            }
-            }
-
-        return;
     }
 
     public void OnSoundDetected(float volume, Vector3 position, GameObject source, bool alertinsphere)
     {
+        if(state == EnemyState.Dead || state == EnemyState.Stunned)
+            return;
         if (alertinsphere)
         {
-            state = EnemyState.Chasing;
+            //state = EnemyState.Chasing;
+            /*
+            float distanceToPlayer = Vector3.Distance(transform.position, source.transform.position);
+            if (distanceToPlayer <= aggroRange)
+            {
+                state = EnemyState.Chasing;
+            }else if (distanceToPlayer <= alertRange)
+            {
+                lastHeardPos = position;
+                state = EnemyState.Alerted;
+            }
+            */
+            //check if player is on navmesh
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(source.transform.position, out hit, 2f, NavMesh.AllAreas)) {
+                state = EnemyState.Chasing;
+                lastHeardPos = hit.position;
+                Debug.Log($"Enemy {name} auto-alerted to sound at position {hit.position} from gameobject {source}");
+            }
             return;
         }
 
@@ -274,47 +319,66 @@ public class EnemyAI : MonoBehaviour
 
     }
     public void chasePlayer(){
+
         agent.isStopped = false;
         float targetHeight = 0.3f;
 
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
 
-
-        agent.SetDestination(player.position);
+        Vector3 DirectionToPlayer = (player.position - transform.position).normalized;
+        Vector3 offset = DirectionToPlayer * attackFollowDistance;
+        Vector3 RandomOffset = new Vector3(Random.Range(-2f,2f),0f,Random.Range(-2f,2f));
+        Vector3 targetPosition = player.position + offset + RandomOffset;
+        NavMeshHit hit;
+        if( NavMesh.SamplePosition(targetPosition, out hit, 2f, NavMesh.AllAreas)) {
+            targetPosition = hit.position;
+        }
+        agent.SetDestination(targetPosition);
     }
   
     public void Idle(){
 
 
-        float distanceToIdle = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),new Vector3(idleSpot.x, 0, idleSpot.z));
-        Scan(5f, true);
-        Debug.Log(distanceToIdle);
-        Debug.Log(agent.isStopped);
+        
+        //Debug.Log(distanceToIdle);
+        //Debug.Log(agent.isStopped);
 
         //check if idlespot is on navmesh
         NavMeshHit hit;
+
         if (NavMesh.SamplePosition(idleSpot, out hit, 2f, NavMesh.AllAreas)) { // 2f is the max distance to sample
             idleSpot = hit.position; // snap to navmesh position
         }
 
-        if(distanceToIdle > 5f){
+        float distanceToIdle = Vector3.Distance(new Vector3(transform.position.x, 0f, transform.position.z), new Vector3(idleSpot.x, 0f, idleSpot.z));
+
+
+        if(distanceToIdle < 2f){
+            agent.isStopped = true;
+            
+            float targetHeight = 0.1f;
+            if(agent.baseOffset >= targetHeight+0.01f){
+                agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
+            }
+             if (idleScan)
+            {
+                DroneLight.SetActive(true);
+                Debug.Log("Idle Scanning");
+                Scan(5f, true);
+            }
+            else
+            {
+                DroneLight.SetActive(false);
+            }
+
+        }else{
             agent.isStopped = false;
             agent.SetDestination(idleSpot);
-        }else{
-            
-                Scan(5f, true);
-                float targetHeight = 0.1f;
-                if(agent.baseOffset != targetHeight){
-                    agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
-                }
-                agent.isStopped = true;
-                
-                
-            
-            
-            
+
         }
     }
+
+    
 
     public void patrol(){
         if (patrolPoints.Count == 0) return;
@@ -345,11 +409,13 @@ public class EnemyAI : MonoBehaviour
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
         NavMeshHit hit;
         if (NavMesh.SamplePosition(lastHeardPos, out hit, 2f, NavMesh.AllAreas)) {
+            agent.isStopped = false;
         agent.SetDestination(hit.position);
         }
         float distanceToPoint = Vector3.Distance(transform.position, hit.position);
 
         if(distanceToPoint <= 5f){
+            Debug.Log("Reached investigation point");
             Scan(5f, false);
             AlertWaitTime -= Time.deltaTime;
             if(AlertWaitTime <= 0f){
@@ -363,61 +429,85 @@ public class EnemyAI : MonoBehaviour
     }
 
     public void Attack(){
+        agent.isStopped = true;
+        Vector3 lookPos = player.position;
+        lookPos.y = transform.position.y; 
+        float targetHeight = 0.3f;
+
+        agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
+        transform.LookAt(lookPos);
 
         
-        transform.LookAt(player);
-
         if(!alreadyAttacked){
-
             //attack code here
             Debug.Log("Enemy Attacking Player");
             //Damage player
             PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
             if(playerHealth != null){
+                EnemyAudioSource.clip = attackSounds[Random.Range(0, attackSounds.Count)];
+                EnemyAudioSource.Play();
+                if(attackEffect != null){
+                    Instantiate(attackEffect, attackPoint.position, attackPoint.rotation);
+                }
                 playerHealth.TakeDamage(attackDamage);
             }
-
             alreadyAttacked = true;
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
         }
-
-        state = EnemyState.Chasing;
-
         
     }
+
     private void ResetAttack(){
         alreadyAttacked = false;
     }
 
     public void Scan(float radius, bool CheckRandom){
-        agent.isStopped = false;
-        if(!hasScanTarget){
-        float angle = Random.Range(0f,360f);
-        float rad = angle * Mathf.Deg2Rad;
-        Vector3 randomOffset = new Vector3(Mathf.Cos(rad),0f,Mathf.Sin(rad))*radius;
-        scanTarget = transform.position + randomOffset;
-        hasScanTarget=true;
+        //Debug.Log("Scanning");
+        agent.isStopped = true;
+        //if(!hasScanTarget){
+
+        Vector3 DirToTarget = (scanTarget - transform.position);
+        DirToTarget.y = 0f;
+
+
+        if(scanTarget == Vector3.zero || DirToTarget.magnitude < 2f || Quaternion.Angle(transform.rotation, Quaternion.LookRotation(DirToTarget)) < 5f) // if no target or close to target, pick new target
+        {
+            float angle = Random.Range(0f,360f);
+            float rad = angle * Mathf.Deg2Rad;
+            Vector3 randomOffset = new Vector3(Mathf.Cos(rad),0f,Mathf.Sin(rad))*radius;
+            scanTarget = transform.position + randomOffset;
+            //hasScanTarget=true;
+            //Debug.Log($"New scan target at {scanTarget}");
+        
         }
 
-        Vector3 Dir = (scanTarget- transform.position).normalized;
-        if(Dir != Vector3.zero){
-            Quaternion lookRotation = Quaternion.LookRotation(Dir);
+        
+        DirToTarget = (scanTarget - transform.position).normalized;
+        if(DirToTarget != Vector3.zero){
+            Quaternion lookRotation = Quaternion.LookRotation(DirToTarget);
             transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * IdleRotationSpeed);
+            //Debug.Log($"Scanning towards {scanTarget}");
         }
 
-        float angleToTarget = Vector3.Angle(transform.forward, Dir);
-        if(angleToTarget < 4f){ 
-            hasScanTarget = false; 
-        }
+        //float angleToTarget = Vector3.Angle(transform.forward, dirToTarget);
+        //if(angleToTarget < 4f){ 
+        //    hasScanTarget = false; 
+        //}
+
 
     }
 
     public void OnMeleeHit(float damage, float duration, bool stun){
-        
+
+        if(state == EnemyState.Idle || state == EnemyState.Patroling){
+            self.TakeDamage(damage*10);
+            state = EnemyState.Chasing;
+        }
         if(stun){
             StopAllCoroutines();
             StartCoroutine(Stun(duration));
         }
+
         self.TakeDamage(damage);
        // do a flinch animation or something
     }
@@ -425,6 +515,7 @@ public class EnemyAI : MonoBehaviour
     public void OnShotHit(float damage, bool stun, float duration ){
         Debug.Log("Enemy hit by shot");
         self.TakeDamage(damage);
+
         if(stun){
             StopAllCoroutines();
             StartCoroutine(Stun(duration));
@@ -434,13 +525,30 @@ public class EnemyAI : MonoBehaviour
     }
 
     public IEnumerator Stun(float duration){
+
+        previousState = state;
         Debug.Log("Enemy Stunned");
         state = EnemyState.Stunned;
+        float targetHeight = 0.1f;
+        DroneLight.SetActive(false);
+
+        agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
         agent.isStopped = true;
-        GetComponentInChildren<Renderer>().material.color = Color.yellow;
         yield return new WaitForSeconds(duration);
-        GetComponentInChildren<Renderer>().material.color = Color.white;
-        state = EnemyState.Chasing;
+
+        state = previousState;
         agent.isStopped = false;
+        DroneLight.SetActive(true);
+        float targetHeight2 = 0.3f;
+        agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight2, Time.deltaTime * 2f);
+        Debug.Log("Enemy Stun Ended");
+    }
+    public void CheckHealth(){
+        if(self.health <= 0){
+            state = EnemyState.Dead;
+            StopAllCoroutines();
+            agent.isStopped = true;
+
+        }
     }
 }

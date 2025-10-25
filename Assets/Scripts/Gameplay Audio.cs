@@ -8,6 +8,7 @@ public class GameplayAudio : MonoBehaviour
 {
     [Header("Audio References")]
     //public AudioMixer audioMixer;
+
     public static GameplayAudio Instance;
 
     public AudioSource GameplayAudioSource;
@@ -17,18 +18,19 @@ public class GameplayAudio : MonoBehaviour
     public List<AudioClip> HeartBeatAudioClips;
     public List<AudioClip> FootstepAudioClips;
 
-    private void Awake()
+    void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
-        else
+        else if (Instance != this)
         {
-            Destroy(gameObject);
+            Destroy(gameObject); 
         }
     }
+
+
     public void PlayGameplaySFX(string clipName)
     {
         AudioClip clip = GameplayAudioClips.Find(c => c.name == clipName);
@@ -52,26 +54,33 @@ public class GameplayAudio : MonoBehaviour
     public void PlayHeartBeat()
     {
         if(!HeartBeatAudioSource.isPlaying){
-            AudioClip clip = HeartBeatAudioClips.Find(c => c.name == "HeartBeat_" + Random.Range(1,4).ToString());
+            AudioClip clip = HeartBeatAudioClips.Find(c => c.name == "HeartBeat_" + Random.Range(2,4).ToString());
             HeartBeatAudioSource.PlayOneShot(clip);
         }
     }
 
-    public void PlayFootstep(string surfaceType, string speed){
 
+    public void PlayFootstep(string surfaceType, string speed)
+    {
+        AudioClip clip = FootstepAudioClips.Find(c => c.name == "Footsteps_" + surfaceType + "_" + speed + "_" + Random.Range(1, 5).ToString());
 
-            AudioClip clip = FootstepAudioClips.Find(c => c.name == surfaceType + "_Footstep_" + Random.Range(1,4).ToString());
-            if (clip != null){
-                float pitchVariation = Random.Range(0.9f, 1.1f);
-                FootstepAudioSource.pitch = pitchVariation;
+        if (clip != null)
+        {
+            float pitchVariation = Random.Range(0.9f, 1.1f);
+            FootstepAudioSource.pitch = pitchVariation;
 
-                if(speed == "Crouch"){
-                    FootstepAudioSource.volume = 0.2f;
-                } else if(speed == "Walk"){
-                    FootstepAudioSource.volume = 0.5f;
-                } else if(speed == "Run"){
-                    FootstepAudioSource.volume = 1f;
-                }
+            if (speed == "Crouch")
+            {
+                FootstepAudioSource.volume = 1f;
+            }
+            else if (speed == "Walk")
+            {
+                FootstepAudioSource.volume = 1f;
+            }
+            else if (speed == "Run")
+            {
+                FootstepAudioSource.volume = 1f;
+            }
 
                 FootstepAudioSource.PlayOneShot(clip);
             }
@@ -80,5 +89,12 @@ public class GameplayAudio : MonoBehaviour
                 Debug.LogWarning("Footstep clip not found for surface type: " + surfaceType);
             }
     }
+    public void StopAllSounds()
+    {
+        HeartBeatAudioSource.Stop();
+        FootstepAudioSource.Stop();
+        GameplayAudioSource.Stop();
+    }
 
-}
+  
+    }

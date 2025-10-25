@@ -28,12 +28,17 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerClickHandle
         slider = GetComponentInChildren<Slider>();
         }
         
+        
         if (slider != null)
         {
             slider.onValueChanged.AddListener(OnSliderValueChanged);
-        Debug.Log("Listener added to slider.");
+            Debug.Log("Listener added to slider.");
             lastSliderValue = slider.value;
         }
+        
+    }
+    void Start(){
+        slider.onValueChanged.AddListener(OnSliderValueChanged);
     }
 
      private void OnDestroy()
@@ -45,16 +50,22 @@ public class UIButton : MonoBehaviour, IPointerEnterHandler, IPointerClickHandle
         }
     }
 
-    private void OnSliderValueChanged(float newValue)
+    public void OnSliderValueChanged(float newValue)
     {
         if (Time.time - lastSoundTime < soundCooldown)
         return;
 
         lastSoundTime = Time.time;
-         Debug.Log($"Slider changed! New value: {newValue}");
-        if (Mathf.Approximately(newValue, lastSliderValue)) return;
-        lastSliderValue = newValue;
+
+        
+
 
         UIAudioManager.Instance?.PlaySliderMove();
+
+       
     }
+
+    
+
+   
 }

@@ -8,6 +8,7 @@ public class Dashing1 : MonoBehaviour
     public Transform playerCamera;
     private Rigidbody rb;
     private PlayerMovement pm;
+    private CameraShaker shaker;
     public PlayerCam cam;
     public float dashFOV;
     [Header("Dashing")]
@@ -28,11 +29,17 @@ public class Dashing1 : MonoBehaviour
     public float dashCooldown;
     public float dashCooldownTimer;
 
+    
+   
+
 
     private void Start(){
 
+
+        
         rb = GetComponent<Rigidbody>();
         pm = GetComponent<PlayerMovement>();
+        shaker = Camera.main.GetComponent<CameraShaker>();
         dashCooldownTimer = dashCooldown;
 
 
@@ -64,6 +71,7 @@ public class Dashing1 : MonoBehaviour
         Transform forwardT;
 
         cam.DoFOVAdjustment(dashFOV, dashDuration/2);
+        shaker.Shake(0.1f, 0.1f);
 
         if (useCameraForward)
             forwardT = playerCamera;

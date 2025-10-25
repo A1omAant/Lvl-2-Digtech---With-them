@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour
     public float maxSlopeAngle;
     private RaycastHit slopeHit;
 
+
     [Header("Drag Settings")]
     public float stealthDrag;
     public float sprintDrag;
@@ -23,6 +24,14 @@ public class PlayerMovement : MonoBehaviour
     public float crouchHeight;
     public float crouchStartHeight;
     public float airMultiplier;
+
+    [Header("Footstep Settings")]
+    public float walkStepInterval = 1f;
+    public float sprintStepInterval = 1.25f;
+    public float crouchStepInterval = 1.6f;
+
+    private float stepTimer = 0f;
+
   
 
     [Header("Movement Keybinds")]
@@ -56,6 +65,8 @@ public class PlayerMovement : MonoBehaviour
 
     Rigidbody rb;
 
+    PlayerMovement playermovement;
+
     public MovementState state;
 
     public enum MovementState{
@@ -72,8 +83,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void Start(){
         rb = GetComponent<Rigidbody>();     
+        playermovement = GetComponent<PlayerMovement>();
         rb.freezeRotation = true;   
         crouchStartHeight = transform.localScale.y;
+        
     }
 
     private void Update(){
@@ -83,6 +96,7 @@ public class PlayerMovement : MonoBehaviour
         PlayerInput();
         StateHandler();
         SpeedControl();
+        HandleFootsteps();
 
         if(state == MovementState.walk || state == MovementState.crouching || state == MovementState.sprinting){
             rb.linearDamping = stealthDrag;
@@ -92,10 +106,11 @@ public class PlayerMovement : MonoBehaviour
 
         
     }
+
         
         
 
-    public string GroudTypeCheck(){
+    public string GroundTypeCheck(){
         RaycastHit hit;
         if(Physics.Raycast(transform.position, Vector3.down, out hit, playerHeight * 0.5f + 0.3f, whatIsGround)){
             Debug.Log("Ground type: " + hit.collider.tag);
@@ -155,13 +170,7 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Input.GetAxisRaw("Horizontal");
         verticalInput = Input.GetAxisRaw("Vertical");
 
-        if(horizontalInput > 0 || horizontalInput < 0 || verticalInput > 0 || verticalInput < 0){
-           GameplayAudio.Instance?.PlayFootstep(GroudTypeCheck(), state.ToString());
-           Debug.Log("Playing footstep sound for " + GroudTypeCheck() + " while " + state.ToString());
-        }
-
-
-
+       
         if(Input.GetKeyDown(crouchKey)){
             transform.localScale = new Vector3(transform.localScale.x, crouchHeight, transform.localScale.z);
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
@@ -171,6 +180,57 @@ public class PlayerMovement : MonoBehaviour
         }
 
   
+    }
+
+    public void HandleFootsteps(){
+        if(!playermovement.grounded){
+            stepTimer = 0f;
+            return;
+        }   
+
+        Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        float speed = horizontalVelocity.magnitude;
+
+        if(speed < 0.1f){
+            stepTimer = 0f;
+            return;
+        }
+
+        float currentStepInterval = walkStepInterval;
+        switch(state){
+            case MovementState.walk:
+                currentStepInterval = walkStepInterval;
+                break;
+            case MovementState.sprinting:
+                currentStepInterval = sprintStepInterval;
+                break;
+            case MovementState.crouching:
+                currentStepInterval = crouchStepInterval;
+                break;
+            case MovementState.dashing:
+                stepTimer = 0f;
+                return;
+            default:
+                currentStepInterval = walkStepInterval;
+                break;
+        }
+
+        stepTimer += Time.deltaTime;
+
+        if(stepTimer >= currentStepInterval){
+            PlayFootStep();
+            stepTimer -= currentStepInterval;
+        }
+    }
+
+    private void PlayFootStep(){
+        string groundType = GroundTypeCheck();
+        if (groundType == "Untagged") groundType = "Concrete";
+        string playerState = playermovement.state.ToString();
+        if (playerState == "walk") playerState = "Walk";
+        else if (playerState == "sprinting") playerState = "Run";
+        else if (playerState == "crouching") playerState = "Walk";
+        GameplayAudio.Instance?.PlayFootstep(groundType, playerState);
     }
     private void PlayerMove(){
 
