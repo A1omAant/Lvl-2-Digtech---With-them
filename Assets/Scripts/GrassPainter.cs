@@ -4,6 +4,11 @@ using System.Collections.Generic;
 using UnityEditor;
 
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+
 public class GrassPainter : MonoBehaviour
 {
     [Header("Grass Painting Settings Proceedural")]
@@ -38,6 +43,7 @@ public class GrassPainter : MonoBehaviour
         }
     }
 
+    #if UNITY_EDITOR
     public void PaintGrass(){
 
         if(ShortGrass.Count == 0 || MediumGrass.Count == 0 || TallGrass.Count == 0 || targetTerrainMesh == null || ParentForGrass == null) {
@@ -104,7 +110,8 @@ public class GrassPainter : MonoBehaviour
                     }
 
                     GameObject grassPrefab = ChosenCategory[Random.Range(0, ChosenCategory.Count)];
-                    GameObject grass = (GameObject)PrefabUtility.InstantiatePrefab(grassPrefab, ParentForGrass);
+                    GameObject grass = (GameObject)PrefabUtility.InstantiatePrefab(grassPrefab, ParentForGrass); // fix prefab utility to work in edit mode
+
 
                     grass.transform.position = hit.point;
                     grass.transform.rotation = Quaternion.Euler(0f, Random.Range(0f,360f), 0f);
@@ -129,6 +136,7 @@ public class GrassPainter : MonoBehaviour
         }
 
     }
+    #endif
 
     #if UNITY_EDITOR
     [CustomEditor(typeof(GrassPainter))]

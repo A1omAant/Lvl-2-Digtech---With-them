@@ -190,6 +190,34 @@ public class PauseMenuController : MonoBehaviour
         buttonText.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1); // ensure it's fully opaque at the end
     }
 
+    private IEnumerator FadeInChildren(Transform parent, float duration){
+
+        float currentTime = 0f;
+        List<CanvasGroup> canvasGroups = new List<CanvasGroup>();
+
+        foreach(Transform child in parent){
+            CanvasGroup cg = child.GetComponent<CanvasGroup>();
+            if(cg == null){
+                cg = child.gameObject.AddComponent<CanvasGroup>();
+            }
+            cg.alpha = 0f;
+            canvasGroups.Add(cg);
+        }
+        while(currentTime < duration){
+            float alpha = Mathf.Clamp01(currentTime / duration);
+            foreach(CanvasGroup cg in canvasGroups){
+                cg.alpha = alpha;
+            }
+            currentTime += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        foreach(CanvasGroup cg in canvasGroups){
+            cg.alpha = 1f;
+        }
+
+
+    }
+
     public void Die(){
         paused = true;
         Cursor.lockState = CursorLockMode.None;
@@ -201,7 +229,10 @@ public class PauseMenuController : MonoBehaviour
         noteUI.SetActive(false);
 
         Image blackScreen = deathScreenUI.GetComponent<Image>();
-        StartCoroutine(FadeInImage(blackScreen, 5f));
+       
+        StartCoroutine(FadeInImage(blackScreen, 3f));
+        StartCoroutine(FadeInChildren(deathScreenUI.transform, 3f));
+
 
         GameplayAudio.Instance?.StopAllSounds();
         GameplayAudio.Instance?.PlayGameplaySFX("Player Death");

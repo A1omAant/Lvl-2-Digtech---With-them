@@ -124,7 +124,13 @@ public class EnemyAI : MonoBehaviour
         PlayerInSight();
         SetState();    
         }
-    } 
+        /*
+        if(state != EnemyState.Dead || state != EnemyState.Stunned && (agent.velocity.magnitude < 0.1f && !agent.isStopped)){
+            agent.ResetPath();
+            SetState();
+        } // if not moving but not stunned or dead 
+        */
+    }
 
     private void PlayerInSight(){
          
@@ -408,10 +414,11 @@ public class EnemyAI : MonoBehaviour
         float targetHeight = 0.2f;
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
         NavMeshHit hit;
-        if (NavMesh.SamplePosition(lastHeardPos, out hit, 2f, NavMesh.AllAreas)) {
+        if (NavMesh.SamplePosition(lastHeardPos, out hit, 2f, NavMesh.AllAreas)) { // 2f is the max distance to sample
             agent.isStopped = false;
-        agent.SetDestination(hit.position);
-        }else if(!NavMesh.SamplePosition(lastHeardPos, out hit, 10f, NavMesh.AllAreas)){
+        agent.SetDestination(hit.position); 
+        }else{ // cannot reach point
+            AlertWaitTime = 15f;
             Debug.Log("Cannot reach investigation point");
             state = EnemyState.Idle;
             return;
