@@ -38,7 +38,10 @@ public class Throwableobject : MonoBehaviour
 
     [Header("Note Settings")]
     public bool IsNote = false;
-    public string NoteText;
+    [TextArea(10,6)]
+    public string NoteText; // Show text content bigger in unity menu to edit
+
+
     public TextMeshProUGUI NoteTextUI;
     public GameObject NoteUI;
     public PauseMenuController pauseMenuController;

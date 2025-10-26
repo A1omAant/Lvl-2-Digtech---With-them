@@ -17,6 +17,7 @@ public class PauseMenuController : MonoBehaviour
    public bool paused = false;
    public bool isInNote = false;
     private bool noteInputLocked = false;
+    public bool UnableToUnpause = false; // Set to true to prevent unpausing (e.g., during death or win sequence) or if in pause menu deeper menus
    
    void Awake(){
   
@@ -33,18 +34,28 @@ public class PauseMenuController : MonoBehaviour
     {
          if (Input.GetKeyDown(KeyCode.Escape))
          {
-              if (isInNote && !noteInputLocked)
-                  ExitNote();
-              else if (paused)
-                  Resume();
-              else
-                  Pause();
+            if (isInNote && !noteInputLocked)
+            {
+                ExitNote();
+            }
+            else if (paused)
+            {
+                if (UnableToUnpause == false)
+                { // nesting this to prevent reopening pause menu when it shouldn't be possible
+                    Resume();
                 }
-         if(!paused && !isInNote){
-              
-              Cursor.lockState = CursorLockMode.Locked;
-              Cursor.visible = false;
-         }
+            }
+            else
+            {
+                Pause();
+            }
+
+            if (!paused && !isInNote)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+        }
     }
     private void handleNoteInput()
     {
@@ -59,6 +70,9 @@ public class PauseMenuController : MonoBehaviour
          }
     }
 
+    public void SetUnpauseable(bool value){
+        UnableToUnpause = value;
+    }
 
    public void Resume()
    {
@@ -187,7 +201,11 @@ public class PauseMenuController : MonoBehaviour
         noteUI.SetActive(false);
 
         Image blackScreen = deathScreenUI.GetComponent<Image>();
-        StartCoroutine(FadeInImage(blackScreen, 2f));
+        StartCoroutine(FadeInImage(blackScreen, 5f));
+
+        GameplayAudio.Instance?.StopAllSounds();
+        GameplayAudio.Instance?.PlayGameplaySFX("Player Death");
+        GameplayAudio.Instance?.PlayGameplaySFX("PlayerDeath");
         Time.timeScale = 0f;
 
 

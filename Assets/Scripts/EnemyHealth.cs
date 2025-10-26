@@ -62,74 +62,78 @@ public class EnemyHealth : MonoBehaviour
     private void die(){
         
         if(dead) return;
-        if (audioSource != null)
+        dead = true;
+
+        GetComponent<EnemyAI>().enabled = false;
+        GetComponent<UnityEngine.AI.NavMeshAgent>().isStopped = true;
+        GetComponent<UnityEngine.AI.NavMeshAgent>().ResetPath();
+        GetComponent<UnityEngine.AI.NavMeshAgent>().velocity = Vector3.zero;
+        GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+        
+
+
+        if (audioSource != null && deathSound != null)
         {
             audioSource.PlayOneShot(deathSound);
              // play death sfxeffect
-            meshRoot.GetComponent<MeshRenderer>().enabled = false;
+        }
 
+        if(deathEffect != null)
+        {
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
+            Destroy(deathEffect.gameObject, 5f);
+        }
+        if(smoke.isPlaying){
+            smoke.Stop();
+        }
+        if(sparks.isPlaying){
+            sparks.Stop();
+        }
+        
+
+        DoPhysicsdeath(gameObject);
+
+        if(meshRoot != null){ // detach children from root
+            foreach(Transform child in meshRoot.transform){
+                child.parent = null;
+                DoPhysicsdeath(child.gameObject);
+                StartCoroutine(DieCoroutine(child.gameObject));
+            }
 
         }
-        Instantiate(deathEffect, transform.position, Quaternion.identity);
-        dead = true;
-        GetComponent<EnemyAI>().enabled = false;
-        GetComponent<UnityEngine.AI.NavMeshAgent>().isStopped = true;
-        GetComponent<UnityEngine.AI.NavMeshAgent>().velocity = Vector3.zero;
-        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-        if(rb == null){
-            rb = gameObject.AddComponent<Rigidbody>();
-        }
-        rb.isKinematic = false;
-        rb.AddForce(Vector3.up * 50f, ForceMode.Impulse);
-        rb.AddTorque(Random.insideUnitSphere * 5f, ForceMode.Impulse);
-
-        //StartCoroutine(DieCoroutine());
-        Destroy(gameObject, 1f);
+        StartCoroutine(DieCoroutine(gameObject));
         
 
        
     }
 
-    private IEnumerator DieCoroutine(){
-        dead = true;
-        GetComponent<EnemyAI>().enabled = false;
-        GetComponent<UnityEngine.AI.NavMeshAgent>().isStopped = true;
-        GetComponent<UnityEngine.AI.NavMeshAgent>().velocity = Vector3.zero;
-        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+    private void DoPhysicsdeath(GameObject obj){
 
+        Rigidbody rb = obj.GetComponent<Rigidbody>();
         if(rb == null){
-            rb = gameObject.AddComponent<Rigidbody>();
+            rb = obj.AddComponent<Rigidbody>();
         }
         rb.isKinematic = false;
-        rb.AddForce(Vector3.up * 50f, ForceMode.Impulse);
-        rb.AddTorque(Random.insideUnitSphere * 5f, ForceMode.Impulse);
+
+        rb.useGravity = true;
+        rb.mass = 1f;
+        rb.linearDamping = 0.5f;
+        rb.angularDamping = 0.5f;
+        Vector3 ForceDir = (Vector3.up * 3f) + (Random.insideUnitSphere * 1.5f);
+        rb.AddForce(ForceDir * 3f, ForceMode.Impulse);
+        rb.AddTorque(Random.insideUnitSphere * 10f, ForceMode.Impulse);
+
+    }
+
+    private IEnumerator DieCoroutine(GameObject obj){
+        yield return new WaitForSeconds(5f);
 
         foreach(Collider col in colliderToDisable){
             col.enabled = false;
         }
-        if(deathEffect != null){
-            Instantiate(deathEffect, transform.position, Quaternion.identity);
-        }
 
-        float fadetime = 3f;
-        Renderer[] renderers = meshRoot.GetComponentsInChildren<Renderer>();
-        float elapsed = 0f;
-        while(elapsed < fadetime){
-            elapsed += Time.deltaTime;
-            float alpha = Mathf.Lerp(1f, 0f, elapsed / fadetime);
-            foreach(Renderer rend in renderers){
-                foreach(Material mat in rend.materials){
-                    Color color = mat.color;
-                    color.a = alpha;
-                    mat.color = color;
-                }
-            }
-            yield return null;
-        }
-        Destroy(gameObject);
-
+        Destroy(obj);
     }
-
 
 
 }

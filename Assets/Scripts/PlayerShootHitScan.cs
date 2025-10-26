@@ -126,7 +126,8 @@ public class PlayerShootHitScan : MonoBehaviour
         RaycastHit hit;
         ammo -= 1f;
         if(AlertsEnemies){
-            SoundSystem.Instance.EmitSound(origin.position, 50f, 200f, 0.7f, AutoAlert, gameObject);
+            SoundSystem.Instance.EmitSound(origin.position, 70f, 40f, 0.7f, false, gameObject); // emit gunshot sound far but quieter for enemys to get alerted but not aggro 
+            SoundSystem.Instance.EmitSound(origin.position, 35f, 200f, 0.7f, AutoAlert, gameObject); // emit gunshot sound close and loud for player to get aggroed
         }
         Debug.Log("Shot fired! with sound emitted.");
         if(ammo < 0f){

@@ -14,6 +14,7 @@ public class PlayerHealth : MonoBehaviour
     public TextMeshProUGUI healthText;
     public Slider healthSlider; 
     public PauseMenuController pauseMenuController;
+    public GameObject RedScreenOverlay;
     
     public bool dead = false;
 
@@ -26,6 +27,7 @@ public class PlayerHealth : MonoBehaviour
     }
 
     void Update(){
+        RedScreen();
         if(currentHealth > maxHealth){
             currentHealth = maxHealth;
         }
@@ -40,6 +42,7 @@ public class PlayerHealth : MonoBehaviour
             GameplayAudio.Instance?.PlayHeartBeat();
             GameplayAudio.Instance?.SetHeartbeatVolume(1 - healthPercentage/100f);
         }
+
 
     }
 
@@ -71,14 +74,26 @@ public class PlayerHealth : MonoBehaviour
         GetComponent<PlayerShootHitScan>().enabled = false;
         // Show death screen UI
         // cull audio
-        GameplayAudio.Instance?.StopAllSounds();
-        GameplayAudio.Instance?.PlayGameplaySFX("Player Death");
-        GameplayAudio.Instance?.PlayGameplaySFX("PlayerDeath");
         //GameplayAudio.Instance?.StopAllSounds();
 
         Debug.Log("Player Died!");
         pauseMenuController.Die();
         // Implement death behavior here (e.g., respawn, game over screen, etc.)
+    }
+
+    private void RedScreen(){
+        // fade in red screen using alpha relative to health
+        float alpha = 1 - (currentHealth / maxHealth); 
+        // alpha goes from 0 to 1 as health goes from max to 0 starting when health is less then 50%
+        if(currentHealth < 50f){
+            alpha = Mathf.Lerp(0f, 0.1f, (50f - currentHealth) / 50f);
+        }
+        else{
+            alpha = 0f;
+        }   
+        Color color = RedScreenOverlay.GetComponent<Image>().color;
+        color.a = alpha;
+        RedScreenOverlay.GetComponent<Image>().color = color;
     }
 
 
