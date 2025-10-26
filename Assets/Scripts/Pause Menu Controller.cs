@@ -16,6 +16,7 @@ public class PauseMenuController : MonoBehaviour
     public GameObject deathScreenUI;
    public bool paused = false;
    public bool isInNote = false;
+    private bool noteInputLocked = false;
    
    void Awake(){
   
@@ -25,22 +26,20 @@ public class PauseMenuController : MonoBehaviour
    void Update()
    {
        handlePauseInput();
-       handleNoteInput();
+       //handleNoteInput();
    }
 
     private void handlePauseInput()
     {
          if (Input.GetKeyDown(KeyCode.Escape))
          {
-              if (paused && !isInNote)
-              {
-                Resume();
-              }
-              else if(!paused && !isInNote)
-              {
-                Pause();
-              }
-         }
+              if (isInNote && !noteInputLocked)
+                  ExitNote();
+              else if (paused)
+                  Resume();
+              else
+                  Pause();
+                }
          if(!paused && !isInNote){
               
               Cursor.lockState = CursorLockMode.Locked;
@@ -101,6 +100,8 @@ public class PauseMenuController : MonoBehaviour
          Cursor.lockState = CursorLockMode.None;
          Cursor.visible = true;
             isInNote = true;
+            noteInputLocked = true;
+            StartCoroutine(UnlockNoteInputNextFrame());
    }
    public void ExitNote(){
          pauseMenuUI.SetActive(false);
@@ -119,8 +120,10 @@ public class PauseMenuController : MonoBehaviour
    }
 
    public void WinGame(){
-        Time.timeScale = 0f;
-        StartCoroutine(WinSequence());
+       Time.timeScale = 0f;
+       paused = true;
+       
+       StartCoroutine(WinSequence());
    }
 
     private System.Collections.IEnumerator WinSequence()
@@ -195,6 +198,12 @@ public class PauseMenuController : MonoBehaviour
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+
+    private IEnumerator UnlockNoteInputNextFrame()
+{
+    yield return null; // wait one frame
+    noteInputLocked = false;
+}
 
 
 }

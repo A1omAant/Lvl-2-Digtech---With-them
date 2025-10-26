@@ -326,9 +326,9 @@ public class EnemyAI : MonoBehaviour
         agent.baseOffset = Mathf.Lerp(agent.baseOffset, targetHeight, Time.deltaTime * 2f);
 
         Vector3 DirectionToPlayer = (player.position - transform.position).normalized;
-        Vector3 offset = DirectionToPlayer * attackFollowDistance;
-        Vector3 RandomOffset = new Vector3(Random.Range(-2f,2f),0f,Random.Range(-2f,2f));
-        Vector3 targetPosition = player.position + offset + RandomOffset;
+        Vector3 offset = DirectionToPlayer * 0.3f;
+        //Vector3 RandomOffset = new Vector3(Random.Range(-2f,2f),0f,Random.Range(-2f,2f));
+        Vector3 targetPosition = player.position + offset;
         NavMeshHit hit;
         if( NavMesh.SamplePosition(targetPosition, out hit, 2f, NavMesh.AllAreas)) {
             targetPosition = hit.position;
@@ -411,6 +411,10 @@ public class EnemyAI : MonoBehaviour
         if (NavMesh.SamplePosition(lastHeardPos, out hit, 2f, NavMesh.AllAreas)) {
             agent.isStopped = false;
         agent.SetDestination(hit.position);
+        }else if(!NavMesh.SamplePosition(lastHeardPos, out hit, 10f, NavMesh.AllAreas)){
+            Debug.Log("Cannot reach investigation point");
+            state = EnemyState.Idle;
+            return;
         }
         float distanceToPoint = Vector3.Distance(transform.position, hit.position);
 
